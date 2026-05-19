@@ -28,7 +28,7 @@ export default async function GuestHeader({ session, locale, token }: Props) {
           <div className="flex items-center gap-1">
             <Link
               href={`${base}/bookings`}
-              className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all duration-150"
+              className="px-2 sm:px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all duration-150 whitespace-nowrap max-w-[90px] sm:max-w-none overflow-hidden text-ellipsis"
             >
               {t("myBookings")}
             </Link>

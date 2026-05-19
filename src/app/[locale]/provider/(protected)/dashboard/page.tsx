@@ -69,7 +69,7 @@ export default async function ProviderDashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
         {[
           { title: "Bookings this month", value: confirmedBookings.length, icon: ClipboardList, sub: "confirmed" },
           { title: "Your earnings",        value: `€${monthRevenue.toFixed(0)}`, icon: TrendingUp, sub: "this month" },

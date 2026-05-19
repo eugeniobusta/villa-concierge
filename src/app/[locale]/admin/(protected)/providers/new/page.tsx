@@ -41,7 +41,7 @@ export default function NewProviderPage() {
         <form action={formAction} className="space-y-5">
           <input type="hidden" name="locale" value={locale} />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="col-span-2 space-y-1.5">
               <Label htmlFor="name">Full Name *</Label>
               <Input id="name" name="name" placeholder="Carlos García" required />
@@ -82,7 +82,7 @@ export default function NewProviderPage() {
           {services.length > 0 && (
             <div className="space-y-2">
               <Label>Services Offered</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {services.map((svc) => (
                   <label
                     key={svc.id}

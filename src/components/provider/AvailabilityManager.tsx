@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { addSlotAction, deleteSlotAction } from "@/actions/availability";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Slot {
@@ -24,20 +24,18 @@ function fmtDate(d: string) {
   });
 }
 
-function fmtTime(t: string) {
-  return t.slice(0, 5);
-}
+function fmtTime(t: string) { return t.slice(0, 5); }
 
 function isToday(d: string) {
   return d === new Date().toISOString().split("T")[0];
 }
 
 export default function AvailabilityManager({ slots, dates }: Props) {
-  const [addingDate, setAddingDate]   = useState<string | null>(null);
-  const [startTime, setStartTime]     = useState("09:00");
-  const [endTime, setEndTime]         = useState("17:00");
-  const [error, setError]             = useState<string | null>(null);
-  const [isPending, startTransition]  = useTransition();
+  const [addingDate, setAddingDate] = useState<string | null>(null);
+  const [startTime,  setStartTime]  = useState("09:00");
+  const [endTime,    setEndTime]    = useState("17:00");
+  const [error,      setError]      = useState<string | null>(null);
+  const [isPending,  startTransition] = useTransition();
 
   const slotsByDate = dates.reduce<Record<string, Slot[]>>((acc, date) => {
     acc[date] = slots.filter((s) => s.date === date);
@@ -64,44 +62,45 @@ export default function AvailabilityManager({ slots, dates }: Props) {
   }
 
   async function handleDelete(slotId: string) {
-    startTransition(async () => {
-      await deleteSlotAction(slotId);
-    });
+    startTransition(async () => { await deleteSlotAction(slotId); });
   }
 
   return (
     <div className="space-y-3">
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-xl">
+        <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-xl">
           {error}
         </p>
       )}
 
       {dates.map((date) => {
-        const daySlots  = slotsByDate[date] ?? [];
-        const isAdding  = addingDate === date;
+        const daySlots = slotsByDate[date] ?? [];
+        const isAdding = addingDate === date;
+        const today    = isToday(date);
 
         return (
           <div
             key={date}
             className={cn(
-              "bg-white rounded-2xl border p-4",
-              isToday(date) ? "border-sky-200" : "border-stone-200"
+              "bg-card rounded-2xl border p-4 transition-colors",
+              today ? "border-primary/30 bg-primary/3" : "border-border"
             )}
           >
             {/* Date header */}
             <div className="flex items-center justify-between mb-3">
               <p className={cn(
                 "text-sm font-medium",
-                isToday(date) ? "text-sky-700" : "text-stone-700"
+                today ? "text-primary" : "text-foreground"
               )}>
                 {fmtDate(date)}
-                {isToday(date) && <span className="ml-2 text-xs font-normal text-sky-500">Today</span>}
+                {today && (
+                  <span className="ml-2 text-xs font-normal text-primary/70">Today</span>
+                )}
               </p>
               {!isAdding && (
                 <button
                   onClick={() => { setAddingDate(date); setError(null); }}
-                  className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add slot
                 </button>
@@ -114,15 +113,15 @@ export default function AvailabilityManager({ slots, dates }: Props) {
                 {daySlots.map((slot) => (
                   <div
                     key={slot.id}
-                    className="flex items-center gap-2 bg-sky-50 border border-sky-100 text-sky-700 rounded-xl px-3 py-1.5 text-xs font-medium"
+                    className="flex items-center gap-2 bg-primary/8 border border-primary/20 text-primary rounded-xl px-3 py-1.5 text-xs font-medium"
                   >
                     {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
                     <button
                       onClick={() => handleDelete(slot.id)}
                       disabled={isPending}
-                      className="text-sky-400 hover:text-red-500 transition-colors ml-1"
+                      className="text-primary/50 hover:text-destructive transition-colors ml-1 disabled:opacity-40"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      {isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
                     </button>
                   </div>
                 ))}
@@ -130,40 +129,44 @@ export default function AvailabilityManager({ slots, dates }: Props) {
             )}
 
             {daySlots.length === 0 && !isAdding && (
-              <p className="text-xs text-stone-300 mb-2">No availability set</p>
+              <p className="text-xs text-muted-foreground/40 mb-2">No availability set</p>
             )}
 
             {/* Add slot form */}
             {isAdding && (
-              <div className="bg-stone-50 rounded-xl p-3 space-y-3">
+              <div className="bg-muted/40 rounded-xl p-3 space-y-3 mt-2">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-stone-500 block mb-1">From</label>
+                    <label className="text-xs text-muted-foreground block mb-1">From</label>
                     <input
                       type="time"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      className="w-full border border-border rounded-lg px-2 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-stone-500 block mb-1">Until</label>
+                    <label className="text-xs text-muted-foreground block mb-1">Until</label>
                     <input
                       type="time"
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full border border-stone-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      className="w-full border border-border rounded-lg px-2 py-1.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     size="sm"
                     onClick={() => handleAdd(date)}
                     disabled={isPending}
-                    className="bg-sky-600 hover:bg-sky-700 text-white text-xs"
+                    className="text-xs"
                   >
-                    {isPending ? "Saving…" : "Save slot"}
+                    {isPending ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="h-3 w-3 animate-spin" /> Saving…
+                      </span>
+                    ) : "Save slot"}
                   </Button>
                   <Button
                     size="sm"

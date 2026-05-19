@@ -86,7 +86,7 @@ export default async function AdminBookingsPage({
           <p className="text-muted-foreground">No bookings yet.</p>
         </div>
       ) : (
-        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-warm-sm">
+        <div className="bg-card rounded-2xl border border-border overflow-x-auto shadow-warm-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">

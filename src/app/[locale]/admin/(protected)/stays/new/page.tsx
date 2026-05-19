@@ -31,7 +31,7 @@ export default function NewStayPage() {
         <form action={formAction} className="space-y-5">
           <input type="hidden" name="locale" value={locale} />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="col-span-2 space-y-1.5">
               <Label htmlFor="guest_name">Guest Name *</Label>
               <Input id="guest_name" name="guest_name" placeholder="Maria Santos" required />
