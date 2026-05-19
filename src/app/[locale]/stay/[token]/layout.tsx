@@ -5,7 +5,10 @@
 import { getTranslations } from "next-intl/server";
 import { getActiveSession } from "@/lib/guest-session";
 import GuestHeader from "@/components/guest/GuestHeader";
-import { Lock } from "lucide-react";
+import { SanchamarLogo } from "@/components/SanchamarLogo";
+import { GuestCodeInput } from "@/components/landing/GuestCodeInput";
+import Link from "next/link";
+import { Lock, ArrowLeft } from "lucide-react";
 
 export default async function GuestLayout({
   children,
@@ -22,13 +25,38 @@ export default async function GuestLayout({
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center max-w-sm px-6">
-          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-6 shadow-warm-sm">
-            <Lock className="h-6 w-6 text-muted-foreground" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-5 py-16">
+        <div className="w-full max-w-sm">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <SanchamarLogo variant="full" height={34} />
           </div>
-          <h1 className="text-xl font-semibold text-foreground mb-3">{t("title")}</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">{t("message")}</p>
+
+          {/* Error card */}
+          <div className="bg-card border border-border rounded-3xl p-7 shadow-warm text-center mb-4">
+            <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-5">
+              <Lock className="h-6 w-6 text-destructive/70" />
+            </div>
+            <h1 className="text-lg font-semibold text-foreground mb-2">{t("title")}</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+              {t("message")}
+            </p>
+
+            {/* Try again */}
+            <div className="text-left">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                Try a different code
+              </p>
+              <GuestCodeInput />
+            </div>
+          </div>
+
+          <Link
+            href={`/${locale}`}
+            className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to home
+          </Link>
         </div>
       </div>
     );

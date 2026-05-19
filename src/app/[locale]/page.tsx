@@ -7,18 +7,26 @@ import LandingInteractive from "@/components/landing/LandingInteractive";
 import { GuestAccessCard } from "@/components/landing/GuestCodeInput";
 import {
   ChefHat, Dumbbell, ShoppingCart, Flower2, Car, Wine, Map, Sparkles,
+  Baby, Waves, Utensils,
 } from "lucide-react";
 
-/* ── Floating service icons (hero right column) ─── */
+/*
+  Floater positions: x is offset from left=48%, so actual left% = x+48.
+  Keep x in 0–42 so icons stay within the right half and don't clip at 100%.
+  y is top % within the section — keep under 72 so icons clear the skyline.
+*/
 const HERO_FLOATERS = [
-  { Icon: ChefHat,      rot:  4, x: 4,  y:  4, dur: 5.5, delay: 0.0, fg: "text-amber-300" },
-  { Icon: Flower2,      rot: -6, x: 48, y: 18, dur: 7.2, delay: 1.1, fg: "text-rose-300"  },
-  { Icon: ShoppingCart, rot:  2, x: 10, y: 50, dur: 6.0, delay: 0.7, fg: "text-emerald-300" },
-  { Icon: Wine,         rot: -4, x: 70, y:  6, dur: 8.0, delay: 0.4, fg: "text-red-300"   },
-  { Icon: Car,          rot:  3, x: 76, y: 46, dur: 5.2, delay: 2.0, fg: "text-slate-300" },
-  { Icon: Dumbbell,     rot: -5, x: 30, y: 74, dur: 6.8, delay: 3.0, fg: "text-violet-300" },
-  { Icon: Map,          rot:  5, x: 56, y: 60, dur: 7.5, delay: 1.5, fg: "text-orange-300" },
-  { Icon: Sparkles,     rot: -3, x: 85, y: 28, dur: 6.2, delay: 2.5, fg: "text-sky-300"   },
+  { Icon: ChefHat,      rot:  4, x:  4, y:  4, dur: 5.5, delay: 0.0, fg: "text-amber-300"   },
+  { Icon: Wine,         rot: -4, x: 24, y:  2, dur: 8.0, delay: 0.4, fg: "text-red-300"     },
+  { Icon: Sparkles,     rot: -3, x: 40, y:  8, dur: 6.2, delay: 2.5, fg: "text-sky-300"     },
+  { Icon: Flower2,      rot: -6, x: 14, y: 20, dur: 7.2, delay: 1.1, fg: "text-rose-300"    },
+  { Icon: Map,          rot:  5, x: 36, y: 24, dur: 7.5, delay: 1.5, fg: "text-orange-300"  },
+  { Icon: ShoppingCart, rot:  2, x:  6, y: 42, dur: 6.0, delay: 0.7, fg: "text-emerald-300" },
+  { Icon: Dumbbell,     rot: -5, x: 28, y: 40, dur: 6.8, delay: 3.0, fg: "text-violet-300"  },
+  { Icon: Car,          rot:  3, x: 40, y: 54, dur: 5.2, delay: 2.0, fg: "text-slate-300"   },
+  { Icon: Utensils,     rot:  6, x: 18, y: 58, dur: 5.8, delay: 0.9, fg: "text-yellow-300"  },
+  { Icon: Baby,         rot: -4, x: 10, y: 68, dur: 7.0, delay: 1.8, fg: "text-pink-300"    },
+  { Icon: Waves,        rot:  2, x: 32, y: 66, dur: 6.5, delay: 3.2, fg: "text-teal-300"    },
 ];
 
 /* Pre-computed star positions — only shown in dark mode via CSS */

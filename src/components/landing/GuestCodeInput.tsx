@@ -1,26 +1,20 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
-import { ArrowRight, Camera, X, Loader2, KeyRound } from "lucide-react";
+import { ArrowRight, Camera, Loader2, KeyRound } from "lucide-react";
 
 interface Props {
-  /** compact = inside hero on dark background; default = modal on light/card bg */
+  /** compact = hero dark-glass card; default = modal on light/card bg */
   compact?: boolean;
-  onClose?: () => void;
 }
 
 export function GuestCodeInput({ compact }: Props) {
   const { locale } = useParams<{ locale: string }>();
-  const [code, setCode]         = useState("");
-  const [error, setError]       = useState("");
-  const [scanning, setScanning] = useState(false);
-  const [loading, setLoading]   = useState(false);
-
-  const videoRef  = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const rafRef    = useRef<number>(0);
+  const [code, setCode]   = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const cameraRef = useRef<HTMLInputElement>(null);
 
   function navigate(token: string) {
     const clean = token.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -34,135 +28,61 @@ export function GuestCodeInput({ compact }: Props) {
     navigate(code);
   }
 
-  const scanFrame = useCallback(() => {
-    const video  = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return;
-    if (video.readyState < 2 || video.videoWidth === 0) {
-      rafRef.current = requestAnimationFrame(scanFrame);
-      return;
-    }
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
+  /** Try to read QR from the captured image using jsQR (optional fallback) */
+  async function handleCameraCapture(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset so the same file can re-trigger
+    e.target.value = "";
 
-    import("jsqr").then(({ default: jsQR }) => {
-      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const qr  = jsQR(img.data, img.width, img.height);
+    try {
+      const bitmap = await createImageBitmap(file);
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(bitmap, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const { default: jsQR } = await import("jsqr");
+      const qr = jsQR(imageData.data, imageData.width, imageData.height);
       if (qr) {
         const match = qr.data.match(/\/stay\/([A-Z0-9]+)/i);
-        const token = match ? match[1] : qr.data;
-        stopCamera();
-        navigate(token);
-        return;
+        navigate(match ? match[1] : qr.data);
+      } else {
+        setError("No QR code found. Enter your code manually.");
       }
-      rafRef.current = requestAnimationFrame(scanFrame);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function startCamera() {
-    setError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } },
-      });
-      streamRef.current = stream;
-      const video = videoRef.current;
-      if (video) {
-        video.srcObject = stream;
-        // Explicit play() required on iOS Safari
-        await video.play().catch(() => {});
-      }
-      setScanning(true);
     } catch {
-      setError("Camera access denied. Enter the code manually.");
+      setError("Could not read image. Enter your code manually.");
     }
   }
 
-  function stopCamera() {
-    cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    setScanning(false);
-  }
-
-  useEffect(() => {
-    if (!scanning) return;
-    const video = videoRef.current;
-    if (!video) return;
-
-    function startScan() { rafRef.current = requestAnimationFrame(scanFrame); }
-
-    // Start immediately if already loaded, otherwise wait
-    if (video.readyState >= 2) {
-      startScan();
-    } else {
-      video.addEventListener("loadeddata", startScan, { once: true });
-      video.addEventListener("canplay",    startScan, { once: true });
-    }
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      video.removeEventListener("loadeddata", startScan);
-      video.removeEventListener("canplay", startScan);
-    };
-  }, [scanning, scanFrame]);
-
-  useEffect(() => () => stopCamera(), []);
-
-  // ── Styling based on context (hero = glass; modal = solid) ──
+  // Compact = dark glass on hero; non-compact = solid on white modal
   const inputCls = compact
-    ? "w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-wider bg-white/10 backdrop-blur-md border-white/30 text-white placeholder:text-white/45 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all"
-    : "w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-wider bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all";
+    ? "w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-wider bg-white/15 border-white/40 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+    : "w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-wider bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all";
 
   const scanBtnCls = compact
-    ? "mt-2.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/20 text-white/75 text-sm hover:bg-white/10 hover:text-white transition-all"
-    : "mt-2.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-muted-foreground text-sm hover:bg-secondary hover:text-foreground transition-all";
+    ? "mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-white/15 border border-white/30 text-white font-medium text-sm hover:bg-white/25 transition-all"
+    : "mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border text-foreground font-medium text-sm hover:bg-secondary transition-all";
 
   return (
     <div className="w-full">
-      {/* Camera preview */}
-      {scanning && (
-        <div className="relative mb-4 rounded-2xl overflow-hidden bg-black" style={{ aspectRatio: "4/3" }}>
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover"
-          />
-          <canvas ref={canvasRef} className="hidden" />
+      {/* Hidden native camera input — opens device camera directly on mobile */}
+      <input
+        ref={cameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleCameraCapture}
+      />
 
-          {/* Scan frame */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="relative w-44 h-44">
-              <div className="absolute inset-0 border-2 border-primary/60 rounded-2xl" />
-              {["top-0 left-0 border-t-2 border-l-2","top-0 right-0 border-t-2 border-r-2",
-                "bottom-0 left-0 border-b-2 border-l-2","bottom-0 right-0 border-b-2 border-r-2"
-              ].map((cls, i) => (
-                <div key={i} className={`absolute w-6 h-6 border-primary rounded-sm ${cls}`} />
-              ))}
-            </div>
-          </div>
-
-          <button onClick={stopCamera}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80">
-            <X className="h-4 w-4" />
-          </button>
-          <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/70 drop-shadow">
-            Point camera at QR code
-          </p>
-        </div>
-      )}
-
-      {/* Code input */}
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           value={code}
           onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(""); }}
-          placeholder="Access code — e.g. HKGEFEBQ"
+          placeholder="e.g. HKGEFEBQ"
           maxLength={20}
           autoComplete="off"
           spellCheck={false}
@@ -171,41 +91,42 @@ export function GuestCodeInput({ compact }: Props) {
         <button
           type="submit"
           disabled={!code.trim() || loading}
-          className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 transition-all shadow-warm whitespace-nowrap flex-shrink-0"
+          className="flex items-center gap-1.5 px-5 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 disabled:opacity-50 transition-all shadow-warm flex-shrink-0"
         >
-          {loading
-            ? <Loader2 className="h-4 w-4 animate-spin" />
-            : <><span className="hidden sm:inline">Enter</span><ArrowRight className="h-4 w-4" /></>
-          }
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+            <><span className="hidden sm:inline">Enter</span><ArrowRight className="h-4 w-4" /></>
+          )}
         </button>
       </form>
 
-      {!scanning && (
-        <button onClick={startCamera} className={scanBtnCls}>
-          <Camera className="h-4 w-4" />
-          Scan QR Code
-        </button>
-      )}
+      <button
+        onClick={() => cameraRef.current?.click()}
+        className={scanBtnCls}
+      >
+        <Camera className="h-4 w-4" />
+        Open Camera
+      </button>
 
       {error && (
-        <p className="mt-2 text-xs text-red-400 dark:text-red-400">{error}</p>
+        <p className={`mt-2 text-xs ${compact ? "text-red-300" : "text-destructive"}`}>{error}</p>
       )}
     </div>
   );
 }
 
-/* ── Standalone card for use in the hero ── */
+/* ── Card wrapper used in the hero ── */
 export function GuestAccessCard() {
   return (
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5">
-      <div className="flex items-center gap-2.5 mb-3">
-        <div className="w-7 h-7 rounded-lg bg-primary/25 flex items-center justify-center flex-shrink-0">
+    // Dark glass card — readable on ANY hero gradient (light or dark mode)
+    <div className="bg-black/40 backdrop-blur-md border border-white/18 rounded-2xl p-5">
+      <div className="flex items-center gap-2.5 mb-2">
+        <div className="w-7 h-7 rounded-lg bg-primary/30 flex items-center justify-center flex-shrink-0">
           <KeyRound className="h-4 w-4 text-primary" />
         </div>
         <p className="text-white font-semibold text-sm">Access your villa services</p>
       </div>
-      <p className="text-white/55 text-xs mb-4 leading-relaxed">
-        Enter the code your host shared or scan the QR code at your villa.
+      <p className="text-white/80 text-xs mb-4 leading-relaxed">
+        Enter the code your host shared, or open your camera to scan the QR code at your villa.
       </p>
       <GuestCodeInput compact />
     </div>
