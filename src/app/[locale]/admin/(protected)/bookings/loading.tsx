@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BookingsLoading() {
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 md:p-8 max-w-6xl">
       <div className="mb-8">
         <Skeleton className="h-8 w-44" />
         <Skeleton className="h-4 w-64 mt-2" />

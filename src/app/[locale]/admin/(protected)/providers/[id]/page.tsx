@@ -35,7 +35,7 @@ export default function EditProviderPage() {
 
   if (!provider) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[50vh]">
+      <div className="p-4 md:p-8 flex items-center justify-center min-h-[50vh]">
         <p className="text-muted-foreground text-sm">Loading…</p>
       </div>
     );
@@ -44,7 +44,7 @@ export default function EditProviderPage() {
   const bioEn = (provider.bio as Record<string, string> | null)?.en ?? "";
 
   return (
-    <div className="p-8 max-w-2xl space-y-4">
+    <div className="p-4 md:p-8 max-w-2xl space-y-4">
       <Link
         href={`/${locale}/admin/providers`}
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"

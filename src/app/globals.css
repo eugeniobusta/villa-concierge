@@ -111,41 +111,41 @@
   --sidebar-ring:               oklch(0.52 0.14  43);
 }
 
-/* ── DARK MODE: warm charcoal, NOT cold blue-grey, NEVER pure black ── */
+/* ── DARK MODE: Malaga night sky navy — seamless with the skyline ── */
 .dark {
-  /* Main backgrounds: warm very-dark brown */
-  --background:        oklch(0.14  0.008 55);
-  --foreground:        oklch(0.94  0.007 60);
+  /* Background matches the skyline's dark navy sky */
+  --background:        oklch(0.12  0.028 242);
+  --foreground:        oklch(0.93  0.008 230);
 
-  /* Surfaces: slightly elevated from background */
-  --card:              oklch(0.18  0.008 55);
-  --card-foreground:   oklch(0.94  0.007 60);
-  --popover:           oklch(0.18  0.008 55);
-  --popover-foreground: oklch(0.94 0.007 60);
+  /* Surfaces */
+  --card:              oklch(0.17  0.024 240);
+  --card-foreground:   oklch(0.93  0.008 230);
+  --popover:           oklch(0.17  0.024 240);
+  --popover-foreground: oklch(0.93 0.008 230);
 
-  /* Primary: Sanchamar gold bright — glows in the dark */
+  /* Primary: Sanchamar gold */
   --primary:           oklch(0.77  0.19  67);
-  --primary-foreground: oklch(0.13 0.010 55);
+  --primary-foreground: oklch(0.12 0.028 242);
 
   /* Secondary */
-  --secondary:         oklch(0.24  0.008 55);
-  --secondary-foreground: oklch(0.85 0.006 60);
+  --secondary:         oklch(0.23  0.020 238);
+  --secondary-foreground: oklch(0.86 0.008 230);
 
   /* Muted */
-  --muted:             oklch(0.23  0.008 55);
-  --muted-foreground:  oklch(0.60  0.008 60);
+  --muted:             oklch(0.22  0.020 238);
+  --muted-foreground:  oklch(0.58  0.012 235);
 
   /* Accent */
-  --accent:            oklch(0.23  0.008 55);
-  --accent-foreground: oklch(0.85  0.006 60);
+  --accent:            oklch(0.22  0.020 238);
+  --accent-foreground: oklch(0.86  0.008 230);
 
   /* Destructive */
   --destructive:       oklch(0.70  0.20  22);
 
-  /* Borders: warm, subtle */
-  --border:            oklch(0.28  0.010 55);
-  --input:             oklch(0.28  0.010 55);
-  --ring:              oklch(0.76  0.17  50);
+  /* Borders */
+  --border:            oklch(0.27  0.018 238);
+  --input:             oklch(0.27  0.018 238);
+  --ring:              oklch(0.77  0.19  67);
 
   /* Charts */
   --chart-1: oklch(0.77 0.19 67);
@@ -155,14 +155,14 @@
   --chart-5: oklch(0.50 0.12 43);
 
   /* Sidebar */
-  --sidebar:                    oklch(0.17  0.008 55);
-  --sidebar-foreground:         oklch(0.94  0.007 60);
-  --sidebar-primary:            oklch(0.76  0.17  50);
-  --sidebar-primary-foreground: oklch(0.13  0.010 55);
-  --sidebar-accent:             oklch(0.24  0.008 55);
-  --sidebar-accent-foreground:  oklch(0.85  0.006 60);
-  --sidebar-border:             oklch(0.25  0.010 55);
-  --sidebar-ring:               oklch(0.76  0.17  50);
+  --sidebar:                    oklch(0.15  0.025 241);
+  --sidebar-foreground:         oklch(0.93  0.008 230);
+  --sidebar-primary:            oklch(0.77  0.19  67);
+  --sidebar-primary-foreground: oklch(0.12  0.028 242);
+  --sidebar-accent:             oklch(0.23  0.020 238);
+  --sidebar-accent-foreground:  oklch(0.86  0.008 230);
+  --sidebar-border:             oklch(0.25  0.018 240);
+  --sidebar-ring:               oklch(0.77  0.19  67);
 }
 
 /* ── BASE STYLES ── */
@@ -272,8 +272,9 @@
   --sv-quay:  #8b5020; /* quay edge */
   --sv-palm:  #8b4e10; /* palm trunks */
   --sv-glow:  #f0a830; /* horizon glow */
-  --sv-label: rgba(60, 30, 0, 0.65);
-  --sv-lbl-line: rgba(60, 30, 0, 0.3);
+  --sv-label:       rgba(25, 12, 0, 0.92);
+  --sv-label-stroke: rgba(255,255,255,0.85);
+  --sv-lbl-line:    rgba(30, 15, 0, 0.35);
 }
 .dark {
   --hero-gradient: linear-gradient(175deg,
@@ -288,8 +289,9 @@
   --sv-quay:  #08121f;
   --sv-palm:  #0a1525;
   --sv-glow:  #c4940a;
-  --sv-label: rgba(255, 255, 255, 0.70);
-  --sv-lbl-line: rgba(255, 255, 255, 0.25);
+  --sv-label:        rgba(255, 255, 255, 0.88);
+  --sv-label-stroke: rgba(0, 0, 0, 0.45);
+  --sv-lbl-line:     rgba(255, 255, 255, 0.28);
 }
 
 /* ── Landing page animations ── */
@@ -312,6 +314,14 @@
 
 /* Card entrance stagger */
 @keyframes lp-fade-up { from{ opacity:0; transform:translateY(24px) } to{ opacity:1; transform:translateY(0) } }
+
+/* Cloud slow drift — light mode only, very gentle */
+@keyframes lp-cloud-drift-1 { from { transform: translateX(0) } to { transform: translateX(160px) } }
+@keyframes lp-cloud-drift-2 { from { transform: translateX(0) } to { transform: translateX(110px) } }
+@keyframes lp-cloud-drift-3 { from { transform: translateX(-80px) } to { transform: translateX(80px) } }
+.lp-cloud-a { animation: lp-cloud-drift-1 65s linear infinite; }
+.lp-cloud-b { animation: lp-cloud-drift-2 90s linear infinite; }
+.lp-cloud-c { animation: lp-cloud-drift-3 75s ease-in-out infinite alternate; }
 
 /* Star slow drift across sky */
 @keyframes lp-star-drift {

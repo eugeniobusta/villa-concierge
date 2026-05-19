@@ -73,7 +73,7 @@ export default async function AdminBookingsPage({
     .reduce((s, b) => s + b.platform_amount, 0);
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-4 md:p-8 max-w-6xl">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-foreground">All Bookings</h1>
         <p className="text-sm text-muted-foreground mt-0.5">

@@ -5,7 +5,7 @@ import {
   ChefHat, Sparkles, ShoppingCart, Dumbbell, Flower2,
   Car, Map, Wine, Baby, Waves, ArrowRight, X,
 } from "lucide-react";
-import { GuestCodeInput } from "@/components/landing/GuestCodeInput";
+import { GuestCodeInput, GuestAccessCard } from "@/components/landing/GuestCodeInput";
 
 /* ─── types ─────────────────────────────────────────────── */
 export interface ServiceData {

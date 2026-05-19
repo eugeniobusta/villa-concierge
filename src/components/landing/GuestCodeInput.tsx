@@ -2,15 +2,15 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ArrowRight, Camera, X, Loader2, QrCode } from "lucide-react";
+import { ArrowRight, Camera, X, Loader2, KeyRound } from "lucide-react";
 
 interface Props {
-  /** Compact = inside hero, default = inside modal */
+  /** compact = inside hero on dark background; default = modal on light/card bg */
   compact?: boolean;
   onClose?: () => void;
 }
 
-export function GuestCodeInput({ compact, onClose }: Props) {
+export function GuestCodeInput({ compact }: Props) {
   const { locale } = useParams<{ locale: string }>();
   const [code, setCode]         = useState("");
   const [error, setError]       = useState("");
@@ -22,7 +22,6 @@ export function GuestCodeInput({ compact, onClose }: Props) {
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef    = useRef<number>(0);
 
-  /* Navigate to the guest page */
   function navigate(token: string) {
     const clean = token.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (!clean) { setError("Please enter a valid access code."); return; }
@@ -35,11 +34,11 @@ export function GuestCodeInput({ compact, onClose }: Props) {
     navigate(code);
   }
 
-  /* ── Camera / QR ── */
   const scanFrame = useCallback(() => {
     const video  = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas || video.readyState < 2) {
+    if (!video || !canvas) return;
+    if (video.readyState < 2 || video.videoWidth === 0) {
       rafRef.current = requestAnimationFrame(scanFrame);
       return;
     }
@@ -49,12 +48,10 @@ export function GuestCodeInput({ compact, onClose }: Props) {
     if (!ctx) return;
     ctx.drawImage(video, 0, 0);
 
-    // Lazy-load jsQR so it doesn't bloat the initial bundle
     import("jsqr").then(({ default: jsQR }) => {
       const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const qr  = jsQR(img.data, img.width, img.height);
       if (qr) {
-        // Extract token from a full URL or bare token
         const match = qr.data.match(/\/stay\/([A-Z0-9]+)/i);
         const token = match ? match[1] : qr.data;
         stopCamera();
@@ -63,16 +60,22 @@ export function GuestCodeInput({ compact, onClose }: Props) {
       }
       rafRef.current = requestAnimationFrame(scanFrame);
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function startCamera() {
     setError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } },
       });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        // Explicit play() required on iOS Safari
+        await video.play().catch(() => {});
+      }
       setScanning(true);
     } catch {
       setError("Camera access denied. Enter the code manually.");
@@ -86,23 +89,43 @@ export function GuestCodeInput({ compact, onClose }: Props) {
     setScanning(false);
   }
 
-  // Start scanning once the video is ready
   useEffect(() => {
     if (!scanning) return;
     const video = videoRef.current;
     if (!video) return;
-    const handler = () => { rafRef.current = requestAnimationFrame(scanFrame); };
-    video.addEventListener("canplay", handler, { once: true });
-    return () => { cancelAnimationFrame(rafRef.current); };
+
+    function startScan() { rafRef.current = requestAnimationFrame(scanFrame); }
+
+    // Start immediately if already loaded, otherwise wait
+    if (video.readyState >= 2) {
+      startScan();
+    } else {
+      video.addEventListener("loadeddata", startScan, { once: true });
+      video.addEventListener("canplay",    startScan, { once: true });
+    }
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      video.removeEventListener("loadeddata", startScan);
+      video.removeEventListener("canplay", startScan);
+    };
   }, [scanning, scanFrame]);
 
   useEffect(() => () => stopCamera(), []);
 
+  // ── Styling based on context (hero = glass; modal = solid) ──
+  const inputCls = compact
+    ? "w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-wider bg-white/10 backdrop-blur-md border-white/30 text-white placeholder:text-white/45 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all"
+    : "w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-wider bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition-all";
+
+  const scanBtnCls = compact
+    ? "mt-2.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/20 text-white/75 text-sm hover:bg-white/10 hover:text-white transition-all"
+    : "mt-2.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-muted-foreground text-sm hover:bg-secondary hover:text-foreground transition-all";
+
   return (
-    <div className={compact ? "w-full" : "w-full max-w-sm"}>
+    <div className="w-full">
       {/* Camera preview */}
       {scanning && (
-        <div className="relative mb-4 rounded-2xl overflow-hidden bg-black aspect-video">
+        <div className="relative mb-4 rounded-2xl overflow-hidden bg-black" style={{ aspectRatio: "4/3" }}>
           <video
             ref={videoRef}
             autoPlay
@@ -112,57 +135,43 @@ export function GuestCodeInput({ compact, onClose }: Props) {
           />
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Scan frame overlay */}
+          {/* Scan frame */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-40 h-40 border-2 border-primary rounded-2xl opacity-80">
-              {/* Corner marks */}
-              {["top-0 left-0","top-0 right-0","bottom-0 left-0","bottom-0 right-0"].map((pos, i) => (
-                <div key={i} className={`absolute ${pos} w-5 h-5 border-primary border-2 rounded-sm`}
-                  style={{
-                    borderRight:  i % 2 === 0 ? "none" : undefined,
-                    borderLeft:   i % 2 === 1 ? "none" : undefined,
-                    borderBottom: i < 2 ? "none" : undefined,
-                    borderTop:    i >= 2 ? "none" : undefined,
-                  }}/>
+            <div className="relative w-44 h-44">
+              <div className="absolute inset-0 border-2 border-primary/60 rounded-2xl" />
+              {["top-0 left-0 border-t-2 border-l-2","top-0 right-0 border-t-2 border-r-2",
+                "bottom-0 left-0 border-b-2 border-l-2","bottom-0 right-0 border-b-2 border-r-2"
+              ].map((cls, i) => (
+                <div key={i} className={`absolute w-6 h-6 border-primary rounded-sm ${cls}`} />
               ))}
             </div>
           </div>
 
-          <button
-            onClick={stopCamera}
-            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
-          >
+          <button onClick={stopCamera}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80">
             <X className="h-4 w-4" />
           </button>
-          <p className="absolute bottom-2 inset-x-0 text-center text-xs text-white/70">
+          <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/70 drop-shadow">
             Point camera at QR code
           </p>
         </div>
       )}
 
-      {/* Manual code entry */}
+      {/* Code input */}
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <div className="relative flex-1">
-          <input
-            value={code}
-            onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(""); }}
-            placeholder="Access code — e.g. HKGEFEBQ"
-            maxLength={20}
-            autoComplete="off"
-            spellCheck={false}
-            className={`w-full rounded-xl border px-4 py-3 text-sm font-mono tracking-widest
-              bg-white/10 dark:bg-white/8 backdrop-blur-md border-white/30 dark:border-white/15
-              text-white placeholder:text-white/40 focus:outline-none focus:border-primary/80
-              focus:ring-2 focus:ring-primary/30 transition-all
-              ${compact ? "" : "bg-card text-foreground border-border placeholder:text-muted-foreground/50"}`}
-          />
-        </div>
+        <input
+          value={code}
+          onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(""); }}
+          placeholder="Access code — e.g. HKGEFEBQ"
+          maxLength={20}
+          autoComplete="off"
+          spellCheck={false}
+          className={inputCls}
+        />
         <button
           type="submit"
           disabled={!code.trim() || loading}
-          className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-primary text-primary-foreground
-            font-medium text-sm hover:bg-primary/90 disabled:opacity-50 transition-all
-            shadow-warm whitespace-nowrap"
+          className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 disabled:opacity-50 transition-all shadow-warm whitespace-nowrap flex-shrink-0"
         >
           {loading
             ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -171,14 +180,8 @@ export function GuestCodeInput({ compact, onClose }: Props) {
         </button>
       </form>
 
-      {/* QR scan button */}
       {!scanning && (
-        <button
-          onClick={startCamera}
-          className="mt-2.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl
-            border border-white/20 dark:border-white/10 text-white/70 text-sm
-            hover:bg-white/10 hover:text-white transition-all backdrop-blur-sm"
-        >
+        <button onClick={startCamera} className={scanBtnCls}>
           <Camera className="h-4 w-4" />
           Scan QR Code
         </button>
@@ -187,6 +190,24 @@ export function GuestCodeInput({ compact, onClose }: Props) {
       {error && (
         <p className="mt-2 text-xs text-red-400 dark:text-red-400">{error}</p>
       )}
+    </div>
+  );
+}
+
+/* ── Standalone card for use in the hero ── */
+export function GuestAccessCard() {
+  return (
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-5">
+      <div className="flex items-center gap-2.5 mb-3">
+        <div className="w-7 h-7 rounded-lg bg-primary/25 flex items-center justify-center flex-shrink-0">
+          <KeyRound className="h-4 w-4 text-primary" />
+        </div>
+        <p className="text-white font-semibold text-sm">Access your villa services</p>
+      </div>
+      <p className="text-white/55 text-xs mb-4 leading-relaxed">
+        Enter the code your host shared or scan the QR code at your villa.
+      </p>
+      <GuestCodeInput compact />
     </div>
   );
 }
