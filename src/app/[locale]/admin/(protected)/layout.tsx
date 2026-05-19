@@ -30,7 +30,7 @@ export default async function ProtectedAdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-stone-50">
+    <div className="flex h-screen bg-background">
       <AdminSidebar locale={locale} userEmail={user.email!} />
       <main className="flex-1 overflow-auto">{children}</main>
       <Toaster richColors position="top-right" />

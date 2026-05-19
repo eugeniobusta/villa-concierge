@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Sun } from "lucide-react";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import type { GuestSession } from "@/types/database";
 import { formatDate } from "@/lib/guest-session";
 
@@ -12,37 +13,41 @@ interface Props {
 }
 
 export default async function GuestHeader({ session, locale, token }: Props) {
-  const t = await getTranslations("guest.header");
+  const t    = await getTranslations("guest.header");
   const base = `/${locale}/stay/${token}`;
 
   return (
-    <header className="border-b border-stone-200 bg-white/90 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-5xl mx-auto px-4">
+    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+      <div className="max-w-5xl mx-auto px-5">
+        {/* Main nav */}
         <div className="h-14 flex items-center justify-between">
-          <Link href={base} className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center">
-              <Sun className="h-3.5 w-3.5 text-amber-600" />
+          <Link href={base} className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center transition-colors group-hover:bg-primary/20">
+              <Sun className="h-3.5 w-3.5 text-primary" />
             </div>
-            <span className="font-semibold text-stone-800 text-sm tracking-wide">
+            <span className="font-semibold text-foreground text-sm tracking-tight">
               Villa Concierge
             </span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
             <Link
               href={`${base}/bookings`}
-              className="text-xs text-stone-500 hover:text-stone-800 font-medium transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all duration-150"
             >
               {t("myBookings")}
             </Link>
             <LanguageSwitcher />
+            <ThemeToggle />
           </div>
         </div>
 
-        <div className="py-2 border-t border-stone-100 flex items-center gap-2">
-          <p className="text-xs text-stone-500">
-            Welcome, <span className="font-medium text-stone-700">{session.guest_name}</span>
-            <span className="mx-2 text-stone-200">·</span>
+        {/* Stay info bar */}
+        <div className="h-9 flex items-center gap-2 border-t border-border/50">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{session.guest_name}</span>
+            <span className="mx-1.5 opacity-30">·</span>
             <span>{formatDate(session.check_in)} – {formatDate(session.check_out)}</span>
           </p>
         </div>

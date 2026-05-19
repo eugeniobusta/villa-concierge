@@ -1,17 +1,17 @@
 "use client";
 
-// Client component: needs usePathname() to highlight the active link.
 import { usePathname } from "@/lib/navigation";
 import { logoutAction } from "@/actions/auth";
 import { Sun, LayoutDashboard, CalendarDays, Users, ClipboardList, LogOut } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navItems = [
-  { label: "Dashboard",  href: "/admin/dashboard",  icon: LayoutDashboard },
+  { label: "Dashboard",   href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Guest Stays", href: "/admin/stays",     icon: CalendarDays },
-  { label: "Providers",  href: "/admin/providers",  icon: Users },
-  { label: "Bookings",   href: "/admin/bookings",   icon: ClipboardList },
+  { label: "Providers",   href: "/admin/providers", icon: Users },
+  { label: "Bookings",    href: "/admin/bookings",  icon: ClipboardList },
 ];
 
 interface Props {
@@ -23,15 +23,15 @@ export default function AdminSidebar({ locale, userEmail }: Props) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-56 flex-shrink-0 flex flex-col border-r border-stone-200 bg-white h-screen sticky top-0">
+    <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-sidebar h-screen sticky top-0">
       {/* Brand */}
-      <div className="flex items-center gap-2 px-5 py-5 border-b border-stone-100">
-        <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center">
-          <Sun className="h-3.5 w-3.5 text-amber-600" />
+      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border/70">
+        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+          <Sun className="h-3.5 w-3.5 text-primary" />
         </div>
         <div>
-          <p className="text-xs font-semibold text-stone-800 leading-tight">Villa Concierge</p>
-          <p className="text-[10px] text-stone-400">Admin</p>
+          <p className="text-xs font-semibold text-foreground leading-tight tracking-tight">Villa Concierge</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Admin Portal</p>
         </div>
       </div>
 
@@ -45,28 +45,31 @@ export default function AdminSidebar({ locale, userEmail }: Props) {
               key={href}
               href={fullHref}
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
+                "flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm transition-all duration-150",
                 isActive
-                  ? "bg-amber-50 text-amber-800 font-medium"
-                  : "text-stone-500 hover:bg-stone-50 hover:text-stone-800"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4 flex-shrink-0" />
+              <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-primary" : "")} />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      {/* User + Logout */}
-      <div className="px-3 py-4 border-t border-stone-100">
-        <p className="text-[11px] text-stone-400 px-3 mb-2 truncate">{userEmail}</p>
+      {/* Footer */}
+      <div className="px-3 py-4 border-t border-border/70 space-y-1">
+        <div className="flex items-center justify-between px-3 mb-2">
+          <p className="text-[11px] text-muted-foreground truncate flex-1 mr-2">{userEmail}</p>
+          <ThemeToggle />
+        </div>
         <form action={logoutAction}>
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="redirect_to" value={`/${locale}/admin/login`} />
           <button
             type="submit"
-            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-stone-500 hover:bg-stone-50 hover:text-stone-800 transition-colors"
+            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-150"
           >
             <LogOut className="h-4 w-4" />
             Sign out

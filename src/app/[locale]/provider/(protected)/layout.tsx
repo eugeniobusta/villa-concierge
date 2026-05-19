@@ -18,7 +18,7 @@ export default async function ProviderLayout({
   }
 
   return (
-    <div className="flex h-screen bg-stone-50">
+    <div className="flex h-screen bg-background">
       <ProviderSidebar locale={locale} providerName={provider.name} />
       <main className="flex-1 overflow-auto">{children}</main>
       <Toaster richColors position="top-right" />
