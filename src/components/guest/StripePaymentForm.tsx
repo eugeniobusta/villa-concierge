@@ -13,11 +13,13 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
-import { STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe";
 
-// loadStripe is called once outside the component so it doesn't reload
-// on every render. The promise resolves to the Stripe.js instance.
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+// NEXT_PUBLIC_ vars are the only env vars safe to use in client components.
+// Never import from @/lib/stripe here — that file uses STRIPE_SECRET_KEY
+// which is undefined in the browser and would crash on import.
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 interface Props {
   clientSecret: string;

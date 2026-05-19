@@ -31,8 +31,27 @@ export async function loginAction(
 }
 
 export async function logoutAction(formData: FormData) {
-  const locale = (formData.get("locale") as string) || "en";
-  const supabase = await createClient();
+  const locale      = (formData.get("locale") as string) || "en";
+  const redirectTo  = (formData.get("redirect_to") as string) || `/${locale}/admin/login`;
+  const supabase    = await createClient();
   await supabase.auth.signOut();
-  redirect(`/${locale}/admin/login`);
+  redirect(redirectTo);
+}
+
+export async function providerLoginAction(
+  _prev: LoginState,
+  formData: FormData
+): Promise<LoginState> {
+  const email    = (formData.get("email") as string)?.trim();
+  const password = formData.get("password") as string;
+  const locale   = (formData.get("locale") as string) || "en";
+
+  if (!email || !password) return { error: "Email and password are required." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) return { error: error.message };
+
+  redirect(`/${locale}/provider/dashboard`);
 }

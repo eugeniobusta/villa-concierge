@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { updateProviderAction } from "@/actions/providers";
+import { linkProviderAccountAction } from "@/actions/availability";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import type { Provider, Service } from "@/types/database";
 export default function EditProviderPage() {
   const { locale, id } = useParams<{ locale: string; id: string }>();
   const [state, formAction, isPending] = useActionState(updateProviderAction, null);
+  const [linkState, linkFormAction, linkPending] = useActionState(linkProviderAccountAction, null);
   const [provider, setProvider] = useState<Provider | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -138,6 +140,38 @@ export default function EditProviderPage() {
             </Button>
           </div>
         </form>
+      </div>
+
+      {/* Link Provider Portal Access */}
+      <div className="bg-white rounded-2xl border border-stone-200 p-8">
+        <p className="text-sm font-medium text-stone-700 mb-1">Provider Portal Access</p>
+        <p className="text-xs text-stone-400 mb-4">
+          {provider.user_id
+            ? "✓ Linked — this provider can log in to the provider portal."
+            : "Not linked yet. Enter their email to give portal access."}
+        </p>
+        <form action={linkFormAction} className="flex gap-2">
+          <input type="hidden" name="provider_id" value={provider.id} />
+          <Input
+            name="provider_email"
+            type="email"
+            placeholder={provider.email ?? "provider@email.com"}
+            defaultValue={provider.email ?? ""}
+            className="flex-1 text-sm"
+          />
+          <Button type="submit" variant="outline" size="sm" disabled={linkPending}>
+            {linkPending ? "Linking…" : provider.user_id ? "Re-link" : "Link account"}
+          </Button>
+        </form>
+        {"error" in (linkState ?? {}) && (
+          <p className="text-xs text-red-500 mt-2">{(linkState as { error: string }).error}</p>
+        )}
+        {"success" in (linkState ?? {}) && (
+          <p className="text-xs text-emerald-600 mt-2">{(linkState as { success: string }).success}</p>
+        )}
+        <p className="text-xs text-stone-300 mt-2">
+          The provider must have a Supabase account first — create one in Supabase Dashboard → Authentication → Users.
+        </p>
       </div>
     </div>
   );
