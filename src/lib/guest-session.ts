@@ -31,11 +31,15 @@ export function getStayDates(checkIn: string, checkOut: string): string[] {
   return dates;
 }
 
-export function formatDate(dateStr: string, opts?: Intl.DateTimeFormatOptions) {
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("en-GB", {
+export function formatDate(
+  dateStr: string,
+  opts?: Intl.DateTimeFormatOptions & { locale?: string }
+) {
+  const { locale, ...dateOpts } = opts ?? {};
+  return new Date(dateStr + "T00:00:00").toLocaleDateString(locale ?? "en-GB", {
     weekday: "short",
     day: "numeric",
     month: "short",
-    ...opts,
+    ...dateOpts,
   });
 }

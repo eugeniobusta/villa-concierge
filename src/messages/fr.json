@@ -17,7 +17,13 @@
     "home": {
       "title": "Services",
       "subtitle": "Réservez n'importe quel service — nous confirmons et organisons tout.",
-      "all": "Tous"
+      "all": "Tous",
+      "viewMyBookings": "Voir mes réservations",
+      "activeCount": "Vous avez {count} réservation(s) active(s)",
+      "noServicesInCategory": "Aucun service dans cette catégorie.",
+      "pricePerHour": "à partir de €{price}/h",
+      "pricePerSession": "à partir de €{price}",
+      "priceFlatFee": "€{price} forfait"
     },
     "booking": {
       "back": "Retour aux Services",
@@ -29,10 +35,12 @@
       "chooseTime": "Choisir une Heure",
       "duration": "Durée",
       "notes": "Demandes spéciales",
+      "optional": "facultatif",
       "notesPlaceholder": "Régimes alimentaires, préférences, tout ce que nous devons savoir…",
       "requestBooking": "Réserver · €{amount}",
       "paymentNote": "Le paiement sera encaissé à la confirmation de votre réservation.",
-      "today": "Aujourd'hui"
+      "today": "Aujourd'hui",
+      "duplicate": "Vous avez déjà une réservation active pour ce service. Annulez-la pour réserver à nouveau."
     },
     "bookings": {
       "title": "Mes Réservations",
@@ -41,6 +49,11 @@
       "payToConfirm": "Payer €{amount} pour confirmer",
       "back": "Retour aux Services",
       "with": "avec {name}",
+      "cancel": "Annuler la réservation",
+      "cancelling": "Annulation…",
+      "cancelConfirm": "Annuler cette réservation ?",
+      "confirmCancel": "Oui, annuler",
+      "keepBooking": "La garder",
       "status": {
         "pending": "En attente",
         "confirmed": "Confirmée",

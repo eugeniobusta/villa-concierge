@@ -17,7 +17,13 @@
     "home": {
       "title": "Servizi",
       "subtitle": "Prenota qualsiasi servizio — confermiamo e organizziamo tutto noi.",
-      "all": "Tutti"
+      "all": "Tutti",
+      "viewMyBookings": "Vedi le mie prenotazioni",
+      "activeCount": "Hai {count} prenotazione/i attiva/e",
+      "noServicesInCategory": "Nessun servizio in questa categoria.",
+      "pricePerHour": "da €{price}/h",
+      "pricePerSession": "da €{price}",
+      "priceFlatFee": "€{price} tariffa fissa"
     },
     "booking": {
       "back": "Torna ai Servizi",
@@ -29,10 +35,12 @@
       "chooseTime": "Scegli Orario",
       "duration": "Durata",
       "notes": "Richieste speciali",
+      "optional": "facoltativo",
       "notesPlaceholder": "Esigenze dietetiche, preferenze, qualsiasi cosa dovremmo sapere…",
       "requestBooking": "Prenota · €{amount}",
       "paymentNote": "Il pagamento verrà addebitato alla conferma della prenotazione.",
-      "today": "Oggi"
+      "today": "Oggi",
+      "duplicate": "Hai già una prenotazione attiva per questo servizio. Cancellala per prenotare di nuovo."
     },
     "bookings": {
       "title": "Le Mie Prenotazioni",
@@ -41,6 +49,11 @@
       "payToConfirm": "Paga €{amount} per confermare",
       "back": "Torna ai Servizi",
       "with": "con {name}",
+      "cancel": "Cancella prenotazione",
+      "cancelling": "Cancellazione…",
+      "cancelConfirm": "Cancellare questa prenotazione?",
+      "confirmCancel": "Sì, cancella",
+      "keepBooking": "Tenerla",
       "status": {
         "pending": "In attesa",
         "confirmed": "Confermata",

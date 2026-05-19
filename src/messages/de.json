@@ -17,7 +17,13 @@
     "home": {
       "title": "Services",
       "subtitle": "Buchen Sie beliebige Services — wir bestätigen und arrangieren alles.",
-      "all": "Alle"
+      "all": "Alle",
+      "viewMyBookings": "Meine Buchungen ansehen",
+      "activeCount": "Sie haben {count} aktive Buchung(en)",
+      "noServicesInCategory": "Keine Services in dieser Kategorie.",
+      "pricePerHour": "ab €{price}/Std",
+      "pricePerSession": "ab €{price}",
+      "priceFlatFee": "€{price} Pauschalpreis"
     },
     "booking": {
       "back": "Zurück zu Services",
@@ -29,10 +35,12 @@
       "chooseTime": "Uhrzeit wählen",
       "duration": "Dauer",
       "notes": "Besondere Wünsche",
+      "optional": "optional",
       "notesPlaceholder": "Ernährungsgewohnheiten, Vorlieben, alles was wir wissen sollten…",
       "requestBooking": "Jetzt buchen · €{amount}",
       "paymentNote": "Die Zahlung wird bei Buchungsbestätigung eingezogen.",
-      "today": "Heute"
+      "today": "Heute",
+      "duplicate": "Sie haben bereits eine aktive Buchung für diesen Service. Stornieren Sie diese, um erneut zu buchen."
     },
     "bookings": {
       "title": "Meine Buchungen",
@@ -41,6 +49,11 @@
       "payToConfirm": "€{amount} zahlen zum Bestätigen",
       "back": "Zurück zu Services",
       "with": "mit {name}",
+      "cancel": "Buchung stornieren",
+      "cancelling": "Wird storniert…",
+      "cancelConfirm": "Diese Buchung stornieren?",
+      "confirmCancel": "Ja, stornieren",
+      "keepBooking": "Behalten",
       "status": {
         "pending": "Ausstehend",
         "confirmed": "Bestätigt",

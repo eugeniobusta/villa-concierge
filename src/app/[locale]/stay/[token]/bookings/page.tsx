@@ -4,23 +4,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createPaymentIntentAction } from "@/actions/payments";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { CancelBookingButton } from "@/components/guest/CancelBookingButton";
 import type { BookingStatus } from "@/types/database";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
-  pending:     "bg-yellow-50 text-yellow-700",
-  confirmed:   "bg-emerald-50 text-emerald-700",
-  in_progress: "bg-blue-50 text-blue-700",
-  completed:   "bg-stone-100 text-stone-500",
-  cancelled:   "bg-red-50 text-red-500",
-};
-
-const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending:     "Pending",
-  confirmed:   "Confirmed",
-  in_progress: "In Progress",
-  completed:   "Completed",
-  cancelled:   "Cancelled",
+  pending:     "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300",
+  confirmed:   "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+  completed:   "bg-muted text-muted-foreground",
+  cancelled:   "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
 };
 
 export default async function MyBookingsPage({
@@ -46,7 +39,6 @@ export default async function MyBookingsPage({
     .eq("guest_session_id", session.id)
     .order("booking_date", { ascending: true });
 
-  // Resolve service + provider names with flat queries
   const psIds = [...new Set((bookings ?? []).map((b) => b.provider_service_id))];
   const { data: psRows } = psIds.length
     ? await db.from("provider_services").select("id, service_id, provider_id").in("id", psIds)
@@ -69,7 +61,7 @@ export default async function MyBookingsPage({
     const svc = ps ? (serviceRows ?? []).find((s) => s.id === ps.service_id) : null;
     const prov = ps ? (providerRows ?? []).find((p) => p.id === ps.provider_id) : null;
     return {
-      serviceName: svc ? (svc.name as Record<string, string>).en : "Service",
+      serviceName: svc ? (svc.name as Record<string, string>)[locale] ?? (svc.name as Record<string, string>).en : "Service",
       providerName: prov?.name ?? "",
     };
   }
@@ -78,26 +70,26 @@ export default async function MyBookingsPage({
     <div className="max-w-2xl mx-auto">
       <Link
         href={`/${locale}/stay/${token}`}
-        className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Services
+        <ArrowLeft className="h-4 w-4" /> {t("back")}
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-stone-900">{t("title")}</h1>
-        <p className="text-stone-400 text-sm mt-1">{session.guest_name}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{t("title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{session.guest_name}</p>
       </div>
 
       {pageError && (
-        <div className="mb-6 text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-xl">
+        <div className="mb-6 text-sm text-destructive bg-destructive/10 border border-destructive/20 px-4 py-3 rounded-xl">
           {pageError}
         </div>
       )}
 
       {!bookings?.length ? (
-        <div className="text-center py-16 border-2 border-dashed border-stone-200 rounded-2xl">
-          <p className="text-stone-400 mb-3">{t("empty")}</p>
-          <Link href={`/${locale}/stay/${token}`} className="text-sm text-amber-600 hover:underline font-medium">
+        <div className="text-center py-16 border-2 border-dashed border-border rounded-2xl">
+          <p className="text-muted-foreground mb-3">{t("empty")}</p>
+          <Link href={`/${locale}/stay/${token}`} className="text-sm text-primary hover:underline font-medium">
             {t("browse")}
           </Link>
         </div>
@@ -109,18 +101,18 @@ export default async function MyBookingsPage({
             return (
               <div
                 key={b.id}
-                className="bg-white rounded-2xl border border-stone-200 p-5"
+                className="bg-card rounded-2xl border border-border p-5 shadow-warm-sm"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="font-medium text-stone-800">{serviceName}</p>
+                    <p className="font-medium text-foreground">{serviceName}</p>
                     {providerName && (
-                      <p className="text-xs text-stone-400 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {t("with", { name: providerName })}
                       </p>
                     )}
-                    <p className="text-xs text-stone-400 mt-1">
-                      {formatDate(b.booking_date)}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDate(b.booking_date, { locale })}
                       {b.start_time && ` · ${b.start_time.slice(0, 5)}`}
                     </p>
                   </div>
@@ -130,34 +122,42 @@ export default async function MyBookingsPage({
                         STATUS_STYLES[b.status as BookingStatus]
                       }`}
                     >
-                      {STATUS_LABELS[b.status as BookingStatus]}
+                      {t(`status.${b.status as BookingStatus}`)}
                     </span>
-                    <p className="text-sm font-semibold text-stone-700 mt-2">
+                    <p className="text-sm font-semibold text-foreground mt-2">
                       €{b.total_amount.toFixed(2)}
                     </p>
                   </div>
                 </div>
 
                 {b.special_requests && (
-                  <p className="text-xs text-stone-400 mt-3 pt-3 border-t border-stone-100">
+                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
                     &ldquo;{b.special_requests}&rdquo;
                   </p>
                 )}
 
-                {/* Pay now button — only for pending, unpaid bookings */}
+                {/* Pay now — only for pending, unpaid bookings */}
                 {b.status === "pending" && b.stripe_payment_status === "pending" && (
-                  <div className="mt-4 pt-4 border-t border-stone-100">
-                    <form action={createPaymentIntentAction}>
+                  <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between gap-3 flex-wrap">
+                    <CancelBookingButton bookingId={b.id} token={token} locale={locale} />
+                    <form action={createPaymentIntentAction} className="flex-shrink-0">
                       <input type="hidden" name="locale" value={locale} />
                       <input type="hidden" name="token" value={token} />
                       <input type="hidden" name="booking_id" value={b.id} />
                       <button
                         type="submit"
-                        className="w-full text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl transition-colors"
+                        className="flex items-center gap-2 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-xl transition-colors shadow-warm-sm"
                       >
                         {t("payToConfirm", { amount: b.total_amount.toFixed(2) })}
                       </button>
                     </form>
+                  </div>
+                )}
+
+                {/* Cancel-only row for confirmed bookings (not yet started) */}
+                {b.status === "confirmed" && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <CancelBookingButton bookingId={b.id} token={token} locale={locale} />
                   </div>
                 )}
               </div>

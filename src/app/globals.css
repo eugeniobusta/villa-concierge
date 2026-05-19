@@ -251,4 +251,9 @@
   .card-hover:hover {
     @apply -translate-y-0.5;
   }
+
+  /* Shimmer animation for skeletons */
+  @keyframes shimmer {
+    100% { transform: translateX(200%); }
+  }
 }

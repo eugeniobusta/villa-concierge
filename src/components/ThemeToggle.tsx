@@ -10,14 +10,15 @@ import { Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, setTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   if (!mounted) return <div className="w-8 h-8" />;
 
-  const isDark = theme === "dark";
+  // resolvedTheme correctly resolves "system" to the actual OS preference
+  const isDark = resolvedTheme === "dark";
 
   return (
     <button

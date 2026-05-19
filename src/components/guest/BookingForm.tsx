@@ -6,6 +6,7 @@ import { createBookingAction } from "@/actions/bookings";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/guest-session";
+import { Loader2 } from "lucide-react";
 import type { Provider, AvailabilitySlot } from "@/types/database";
 
 interface ProviderWithSlots {
@@ -33,7 +34,6 @@ export default function BookingForm({
   providers, stayDates, locale, token,
 }: Props) {
   const t   = useTranslations("guest.booking");
-  const tg  = useTranslations("guest.bookings");
   const currentLocale = useLocale();
 
   const [state, formAction, isPending] = useActionState(createBookingAction, null);
@@ -44,9 +44,9 @@ export default function BookingForm({
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
   const [duration, setDuration]           = useState<number>(minDuration ?? 1);
 
-  const selected    = providers.find((p) => p.providerServiceId === selectedPsId);
-  const unitPrice   = selected?.customPrice ?? basePrice;
-  const slotsForDate = selected && selectedDate
+  const selected       = providers.find((p) => p.providerServiceId === selectedPsId);
+  const unitPrice      = selected?.customPrice ?? basePrice;
+  const slotsForDate   = selected && selectedDate
     ? selected.slots.filter((s) => s.date === selectedDate && !s.is_blocked)
     : [];
   const datesWithSlots = selected
@@ -59,17 +59,23 @@ export default function BookingForm({
   const canSubmit = selectedPsId && selectedDate &&
     (priceUnit === "flat" || priceUnit === "per_item" || selectedStart);
 
-  function fmtTime(t: string) {
-    const [h, m] = t.split(":");
+  function fmtTime(time: string) {
+    const [h, m] = time.split(":");
     const hour = parseInt(h);
     return `${hour % 12 || 12}:${m} ${hour < 12 ? "AM" : "PM"}`;
   }
 
-  // Pick the right language from a JSONB multilingual field
   function pickBio(bio: Record<string, string> | null) {
     if (!bio) return null;
     return bio[currentLocale] ?? bio.en ?? null;
   }
+
+  const dateButtonClass = (active: boolean) => cn(
+    "px-3 py-2 rounded-xl border text-sm transition-all",
+    active
+      ? "bg-foreground text-background border-foreground"
+      : "bg-card text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground"
+  );
 
   return (
     <form action={formAction} className="space-y-6">
@@ -83,7 +89,7 @@ export default function BookingForm({
       {/* Step 1: Provider */}
       {providers.length > 1 && (
         <div>
-          <p className="text-sm font-medium text-stone-700 mb-3">{t("chooseProvider")}</p>
+          <p className="text-sm font-medium text-foreground mb-3">{t("chooseProvider")}</p>
           <div className="grid gap-3">
             {providers.map((p) => (
               <button
@@ -93,22 +99,22 @@ export default function BookingForm({
                 className={cn(
                   "flex items-center gap-4 p-4 rounded-2xl border text-left transition-all",
                   selectedPsId === p.providerServiceId
-                    ? "border-amber-400 bg-amber-50"
-                    : "border-stone-200 bg-white hover:border-stone-300"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card hover:border-primary/40"
                 )}
               >
-                <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-600 font-semibold text-sm flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-semibold text-sm flex-shrink-0">
                   {p.provider.name.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-stone-800 text-sm">{p.provider.name}</p>
+                  <p className="font-medium text-foreground text-sm">{p.provider.name}</p>
                   {p.provider.bio && (
-                    <p className="text-xs text-stone-400 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       {pickBio(p.provider.bio as Record<string, string>)}
                     </p>
                   )}
                 </div>
-                <p className="text-sm font-semibold text-amber-700 flex-shrink-0">
+                <p className="text-sm font-semibold text-primary flex-shrink-0">
                   €{p.customPrice ?? basePrice}{isHourly ? "/hr" : ""}
                 </p>
               </button>
@@ -120,9 +126,9 @@ export default function BookingForm({
       {/* Step 2: Date */}
       {selectedPsId && (
         <div>
-          <p className="text-sm font-medium text-stone-700 mb-3">{t("chooseDate")}</p>
+          <p className="text-sm font-medium text-foreground mb-3">{t("chooseDate")}</p>
           {datesWithSlots.length === 0 && priceUnit !== "flat" && priceUnit !== "per_item" ? (
-            <p className="text-sm text-stone-400">{t("noAvailability")}</p>
+            <p className="text-sm text-muted-foreground">{t("noAvailability")}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {(datesWithSlots.length > 0 ? datesWithSlots : stayDates).map((d) => (
@@ -130,14 +136,9 @@ export default function BookingForm({
                   key={d}
                   type="button"
                   onClick={() => { setSelectedDate(d); setSelectedStart(null); }}
-                  className={cn(
-                    "px-3 py-2 rounded-xl border text-sm transition-all",
-                    selectedDate === d
-                      ? "bg-stone-900 text-white border-stone-900"
-                      : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
-                  )}
+                  className={dateButtonClass(selectedDate === d)}
                 >
-                  {formatDate(d, { weekday: "short", day: "numeric", month: "short" })}
+                  {formatDate(d, { locale })}
                 </button>
               ))}
             </div>
@@ -148,19 +149,14 @@ export default function BookingForm({
       {/* Step 3: Time */}
       {selectedDate && slotsForDate.length > 0 && (
         <div>
-          <p className="text-sm font-medium text-stone-700 mb-3">{t("chooseTime")}</p>
+          <p className="text-sm font-medium text-foreground mb-3">{t("chooseTime")}</p>
           <div className="flex flex-wrap gap-2">
             {slotsForDate.map((slot) => (
               <button
                 key={slot.id}
                 type="button"
                 onClick={() => setSelectedStart(slot.start_time)}
-                className={cn(
-                  "px-3 py-2 rounded-xl border text-sm transition-all",
-                  selectedStart === slot.start_time
-                    ? "bg-stone-900 text-white border-stone-900"
-                    : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
-                )}
+                className={dateButtonClass(selectedStart === slot.start_time)}
               >
                 {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
               </button>
@@ -172,7 +168,7 @@ export default function BookingForm({
       {/* Step 4: Duration */}
       {isHourly && selectedDate && (
         <div>
-          <p className="text-sm font-medium text-stone-700 mb-3">{t("duration")}</p>
+          <p className="text-sm font-medium text-foreground mb-3">{t("duration")}</p>
           <div className="flex flex-wrap gap-2">
             {Array.from(
               { length: (maxDuration ?? 8) - (minDuration ?? 1) + 1 },
@@ -182,12 +178,7 @@ export default function BookingForm({
                 key={h}
                 type="button"
                 onClick={() => setDuration(h)}
-                className={cn(
-                  "px-3 py-2 rounded-xl border text-sm transition-all",
-                  duration === h
-                    ? "bg-stone-900 text-white border-stone-900"
-                    : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
-                )}
+                className={dateButtonClass(duration === h)}
               >
                 {h}h
               </button>
@@ -199,43 +190,54 @@ export default function BookingForm({
       {/* Step 5: Notes */}
       {selectedDate && (
         <div>
-          <label className="text-sm font-medium text-stone-700 block mb-2">
-            {t("notes")} <span className="font-normal text-stone-400">(optional)</span>
+          <label className="text-sm font-medium text-foreground block mb-2">
+            {t("notes")} <span className="font-normal text-muted-foreground">({t("optional")})</span>
           </label>
           <textarea
             name="notes"
             rows={3}
             placeholder={t("notesPlaceholder")}
-            className="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-700 placeholder:text-stone-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none"
+            className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent resize-none transition-colors"
           />
         </div>
       )}
 
       {/* Summary + Submit */}
       {canSubmit && (
-        <div className="bg-amber-50 rounded-2xl p-5 border border-amber-100">
+        <div className="bg-primary/5 rounded-2xl p-5 border border-primary/15">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <p className="text-sm font-medium text-stone-800">{serviceName}</p>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-sm font-medium text-foreground">{serviceName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 {selected?.provider.name}
-                {selectedDate && ` · ${formatDate(selectedDate)}`}
+                {selectedDate && ` · ${formatDate(selectedDate, { locale })}`}
                 {isHourly && ` · ${duration}h`}
               </p>
             </div>
-            <p className="text-xl font-semibold text-stone-900">€{total.toFixed(2)}</p>
+            <p className="text-xl font-semibold text-foreground">€{total.toFixed(2)}</p>
           </div>
 
           {state?.error && (
-            <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg mb-3">
+            <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-3">
               {state.error}
             </p>
           )}
 
-          <Button type="submit" disabled={isPending} className="w-full bg-amber-600 hover:bg-amber-700 text-white">
-            {isPending ? "…" : t("requestBooking", { amount: total.toFixed(2) })}
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            {isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>…</span>
+              </span>
+            ) : (
+              t("requestBooking", { amount: total.toFixed(2) })
+            )}
           </Button>
-          <p className="text-xs text-stone-400 text-center mt-2">{t("paymentNote")}</p>
+          <p className="text-xs text-muted-foreground text-center mt-2">{t("paymentNote")}</p>
         </div>
       )}
     </form>

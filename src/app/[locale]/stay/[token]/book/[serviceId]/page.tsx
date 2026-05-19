@@ -1,6 +1,4 @@
-// Server component: fetches service + providers + availability, passes to BookingForm.
-// The heavy lifting (interactivity) happens in the client component.
-
+import { getTranslations } from "next-intl/server";
 import { getActiveSession, getStayDates } from "@/lib/guest-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import BookingForm from "@/components/guest/BookingForm";
@@ -16,13 +14,15 @@ export default async function BookServicePage({
 }) {
   const { locale, token, serviceId } = await params;
 
-  const session = await getActiveSession(token);
+  const [session, t] = await Promise.all([
+    getActiveSession(token),
+    getTranslations("guest.booking"),
+  ]);
   if (!session) notFound();
 
   const db = createAdminClient();
   const stayDates = getStayDates(session.check_in, session.check_out);
 
-  // Fetch service + all provider_services for this service (with providers joined)
   const [{ data: service }, { data: providerServices }] = await Promise.all([
     db.from("services").select("*").eq("id", serviceId).single(),
     db
@@ -34,7 +34,6 @@ export default async function BookServicePage({
 
   if (!service) notFound();
 
-  // Flat query for providers (no nested joins — keeps DB types simple)
   const providerIds = (providerServices ?? []).map((ps) => ps.provider_id);
 
   const [{ data: providerRows }, { data: slots }] = await Promise.all([
@@ -70,33 +69,31 @@ export default async function BookServicePage({
       slots: AvailabilitySlot[];
     }[];
 
-  const name = (service.name as Record<string, string>).en;
+  const name = (service.name as Record<string, string>)[locale] ?? (service.name as Record<string, string>).en;
   const desc = service.description
-    ? (service.description as Record<string, string>).en
+    ? ((service.description as Record<string, string>)[locale] ?? (service.description as Record<string, string>).en)
     : null;
 
   return (
     <div className="max-w-lg mx-auto">
-      {/* Back link */}
       <Link
         href={`/${locale}/stay/${token}`}
-        className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Services
+        <ArrowLeft className="h-4 w-4" /> {t("back")}
       </Link>
 
-      {/* Service header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-stone-900 mb-1">{name}</h1>
-        {desc && <p className="text-stone-500 text-sm leading-relaxed">{desc}</p>}
+        <h1 className="text-2xl font-semibold text-foreground mb-1">{name}</h1>
+        {desc && <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>}
       </div>
 
       {providers.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-stone-200 rounded-2xl">
-          <p className="text-stone-400 text-sm">
-            No providers available for this service right now.
+        <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl">
+          <p className="text-muted-foreground text-sm">
+            {t("noProviders")}
             <br />
-            Contact your host to arrange it.
+            {t("contactHost")}
           </p>
         </div>
       ) : (

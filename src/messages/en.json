@@ -17,7 +17,13 @@
     "home": {
       "title": "Services",
       "subtitle": "Book any service — we'll confirm and arrange everything.",
-      "all": "All"
+      "all": "All",
+      "viewMyBookings": "View my bookings",
+      "activeCount": "You have {count} active booking(s)",
+      "noServicesInCategory": "No services in this category.",
+      "pricePerHour": "from €{price}/hr",
+      "pricePerSession": "from €{price}",
+      "priceFlatFee": "€{price} flat fee"
     },
     "booking": {
       "back": "Back to Services",
@@ -29,10 +35,12 @@
       "chooseTime": "Choose Time",
       "duration": "Duration",
       "notes": "Special requests",
+      "optional": "optional",
       "notesPlaceholder": "Dietary requirements, preferences, anything we should know…",
       "requestBooking": "Request Booking · €{amount}",
       "paymentNote": "Payment will be collected when your booking is confirmed.",
-      "today": "Today"
+      "today": "Today",
+      "duplicate": "You already have an active booking for this service. Cancel it to book again."
     },
     "bookings": {
       "title": "My Bookings",
@@ -41,6 +49,11 @@
       "payToConfirm": "Pay €{amount} to confirm",
       "back": "Back to Services",
       "with": "with {name}",
+      "cancel": "Cancel booking",
+      "cancelling": "Cancelling…",
+      "cancelConfirm": "Cancel this booking?",
+      "confirmCancel": "Yes, cancel",
+      "keepBooking": "Keep it",
       "status": {
         "pending": "Pending",
         "confirmed": "Confirmed",

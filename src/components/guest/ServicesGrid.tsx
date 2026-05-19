@@ -36,12 +36,8 @@ interface Props {
   token: string;
 }
 
-function formatPrice(price: number, unit: string): string {
-  const fmt = `€${price % 1 === 0 ? price : price.toFixed(0)}`;
-  if (unit === "per_hour")    return `from ${fmt}/hr`;
-  if (unit === "per_session") return `from ${fmt}`;
-  if (unit === "flat")        return `${fmt} flat fee`;
-  return fmt;
+function fmtAmt(price: number): string {
+  return `${price % 1 === 0 ? price : price.toFixed(0)}`;
 }
 
 function pick(obj: Record<string, string>, locale: string): string {
@@ -91,7 +87,7 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
       {/* Services grid */}
       {filtered.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-muted-foreground text-sm">No services in this category.</p>
+          <p className="text-muted-foreground text-sm">{t("noServicesInCategory")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
@@ -127,7 +123,11 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
                 )}
                 <div className="relative flex items-center justify-between">
                   <p className="text-xs font-semibold text-primary">
-                    {formatPrice(svc.base_price, svc.price_unit)}
+                    {svc.price_unit === "per_hour"
+                      ? t("pricePerHour", { price: fmtAmt(svc.base_price) })
+                      : svc.price_unit === "flat"
+                      ? t("priceFlatFee", { price: fmtAmt(svc.base_price) })
+                      : t("pricePerSession", { price: fmtAmt(svc.base_price) })}
                   </p>
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/0 group-hover:text-primary transition-all duration-200 group-hover:translate-x-0.5" />
                 </div>

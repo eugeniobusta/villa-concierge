@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveSession } from "@/lib/guest-session";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 type ActionState = { error: string } | null;
@@ -18,8 +19,10 @@ export async function createBookingAction(
   const durationHours    = parseFloat((formData.get("duration_hours") as string) || "0");
   const notes            = (formData.get("notes") as string)?.trim() || null;
 
-  // Re-validate the token server-side — never trust the client to have done it
-  const session = await getActiveSession(token);
+  const [session, t] = await Promise.all([
+    getActiveSession(token),
+    getTranslations({ locale, namespace: "guest.booking" }),
+  ]);
   if (!session) return { error: "Your stay access has expired." };
 
   if (!providerServiceId || !bookingDate) {
@@ -28,9 +31,6 @@ export async function createBookingAction(
 
   const db = createAdminClient();
 
-  // Fetch provider_service, then the related service and provider separately.
-  // Nested joins (providers(field)) require Relationships in the DB type —
-  // we use flat queries instead to keep types simple.
   const { data: ps } = await db
     .from("provider_services")
     .select("*")
@@ -38,6 +38,25 @@ export async function createBookingAction(
     .single();
 
   if (!ps) return { error: "Service no longer available." };
+
+  // Duplicate booking prevention: check if any active booking exists for this service + session
+  const { data: allPsForService } = await db
+    .from("provider_services")
+    .select("id")
+    .eq("service_id", ps.service_id);
+
+  const allPsIds = (allPsForService ?? []).map((p) => p.id);
+
+  const { data: existingBookings } = await db
+    .from("bookings")
+    .select("id")
+    .eq("guest_session_id", session.id)
+    .in("provider_service_id", allPsIds)
+    .neq("status", "cancelled");
+
+  if (existingBookings && existingBookings.length > 0) {
+    return { error: t("duplicate") };
+  }
 
   const [{ data: service }, { data: provider }] = await Promise.all([
     db.from("services").select("base_price, price_unit").eq("id", ps.service_id).single(),
@@ -48,13 +67,11 @@ export async function createBookingAction(
 
   const unitPrice = ps.custom_price ?? service.base_price;
 
-  // Calculate total based on price_unit
   let totalAmount: number;
   let endTime: string | null = null;
 
   if (service.price_unit === "per_hour" && durationHours > 0) {
     totalAmount = unitPrice * durationHours;
-    // Compute end_time from start_time + duration
     if (startTime) {
       const [h, m] = startTime.split(":").map(Number);
       const endH = h + Math.floor(durationHours);
@@ -70,20 +87,41 @@ export async function createBookingAction(
   const platformAmount = parseFloat((totalAmount - providerAmount).toFixed(2));
 
   const { error } = await db.from("bookings").insert({
-    guest_session_id:    session.id,
-    provider_service_id: providerServiceId,
-    booking_date:        bookingDate,
-    start_time:          startTime || null,
-    end_time:            endTime,
-    special_requests:    notes,
-    status:              "pending",
-    total_amount:        totalAmount,
-    provider_amount:     providerAmount,
-    platform_amount:     platformAmount,
+    guest_session_id:      session.id,
+    provider_service_id:   providerServiceId,
+    booking_date:          bookingDate,
+    start_time:            startTime || null,
+    end_time:              endTime,
+    special_requests:      notes,
+    status:                "pending",
+    total_amount:          totalAmount,
+    provider_amount:       providerAmount,
+    platform_amount:       platformAmount,
     stripe_payment_status: "pending",
   });
 
   if (error) return { error: error.message };
+
+  redirect(`/${locale}/stay/${token}/bookings`);
+}
+
+export async function cancelBookingAction(formData: FormData): Promise<void> {
+  const bookingId = formData.get("booking_id") as string;
+  const token     = formData.get("token") as string;
+  const locale    = (formData.get("locale") as string) || "en";
+
+  const session = await getActiveSession(token);
+  if (!session) return;
+
+  const db = createAdminClient();
+
+  // Only cancel if booking belongs to this session and hasn't started/completed
+  await db
+    .from("bookings")
+    .update({ status: "cancelled" })
+    .eq("id", bookingId)
+    .eq("guest_session_id", session.id)
+    .in("status", ["pending", "confirmed"]);
 
   redirect(`/${locale}/stay/${token}/bookings`);
 }
