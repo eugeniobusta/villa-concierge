@@ -6,7 +6,6 @@
 // that server components can read.
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "@/lib/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +18,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
 
   async function handleSubmit(e: FormEvent) {
@@ -39,10 +37,10 @@ export default function LoginPage() {
       return;
     }
 
-    // router.refresh() tells Next.js to re-run server components,
-    // so the admin layout re-reads the new auth cookie.
-    router.refresh();
-    router.push(`/${locale}/admin/dashboard` as Parameters<typeof router.push>[0]);
+    // Full page navigation so the server re-reads the new auth cookie.
+    // next-intl's router.push() prepends the locale automatically, which
+    // would double it (/en/en/admin/dashboard). window.location is explicit.
+    window.location.href = `/${locale}/admin/dashboard`;
   }
 
   return (
