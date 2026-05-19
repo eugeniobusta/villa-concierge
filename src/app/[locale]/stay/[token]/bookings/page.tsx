@@ -1,5 +1,6 @@
 import { getActiveSession, formatDate } from "@/lib/guest-session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createPaymentIntentAction } from "@/actions/payments";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -23,10 +24,13 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 
 export default async function MyBookingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; token: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { locale, token } = await params;
+  const { error: pageError } = await searchParams;
   const session = await getActiveSession(token);
   if (!session) notFound();
 
@@ -80,6 +84,12 @@ export default async function MyBookingsPage({
         <p className="text-stone-400 text-sm mt-1">{session.guest_name}</p>
       </div>
 
+      {pageError && (
+        <div className="mb-6 text-sm text-red-600 bg-red-50 border border-red-100 px-4 py-3 rounded-xl">
+          {pageError}
+        </div>
+      )}
+
       {!bookings?.length ? (
         <div className="text-center py-16 border-2 border-dashed border-stone-200 rounded-2xl">
           <p className="text-stone-400 mb-3">No bookings yet.</p>
@@ -131,6 +141,23 @@ export default async function MyBookingsPage({
                   <p className="text-xs text-stone-400 mt-3 pt-3 border-t border-stone-100">
                     &ldquo;{b.special_requests}&rdquo;
                   </p>
+                )}
+
+                {/* Pay now button — only for pending, unpaid bookings */}
+                {b.status === "pending" && b.stripe_payment_status === "pending" && (
+                  <div className="mt-4 pt-4 border-t border-stone-100">
+                    <form action={createPaymentIntentAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="token" value={token} />
+                      <input type="hidden" name="booking_id" value={b.id} />
+                      <button
+                        type="submit"
+                        className="w-full text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl transition-colors"
+                      >
+                        Pay €{b.total_amount.toFixed(2)} to confirm
+                      </button>
+                    </form>
+                  </div>
                 )}
               </div>
             );
