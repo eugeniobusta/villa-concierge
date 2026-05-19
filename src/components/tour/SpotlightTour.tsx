@@ -1,236 +1,249 @@
 "use client";
 
 /**
- * SpotlightTour — a lightweight guided tour engine.
+ * SpotlightTour — guided tour engine.
  *
- * How it works:
- *  • An SVG overlay darkens the entire screen.
- *  • A "mask hole" in the SVG reveals the target element in full colour.
- *  • The target element gets a temporary z-index boost so it sits above the overlay.
- *  • A tooltip card anchors above or below the spotlight.
- *  • State persists in localStorage so the tour only shows once per device.
+ * Design principles:
+ *  1. Tooltip is ALWAYS at the bottom of the screen — never cut off on any device.
+ *  2. A full-screen click-catcher at the top of the z-stack intercepts ALL clicks
+ *     so elements behind the overlay can never be accidentally activated.
+ *  3. We never manipulate z-index of target elements — the SVG mask creates the
+ *     visual hole without needing to lift elements out of the stacking context.
+ *  4. Scroll is fully automatic — user only needs to tap "Next".
+ *  5. Cleanup is deterministic — one setVisible(false) removes everything.
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { ChevronRight } from "lucide-react";
 import { SanchamarLogo } from "@/components/SanchamarLogo";
 
-/* ── Types ──────────────────────────────────────────────────────── */
-
 export interface TourStep {
-  /** data-tour="..." attribute on the element to spotlight.
-   *  Omit for a full-screen welcome card (no spotlight). */
+  /** data-tour="value" attribute on the element to spotlight (omit = welcome card) */
   target?: string;
-  title:  string;
-  body:   string;
+  title:   string;
+  body:    string;
 }
 
 interface Props {
   steps:      TourStep[];
-  storageKey: string;  // localStorage key — tour shows until this is set
-  name?:      string;  // person's name for the welcome step
+  storageKey: string;
+  name?:      string;
 }
 
-/* ── Component ──────────────────────────────────────────────────── */
+/* How many px to reserve at the bottom for the tooltip card */
+const TOOLTIP_RESERVE = 180;
+/* Gap between header and element when we auto-scroll */
+const HEADER_CLEARANCE = 72;
 
 export function SpotlightTour({ steps, storageKey, name }: Props) {
   const [visible,  setVisible]  = useState(false);
   const [step,     setStep]     = useState(0);
-  const [spotRect, setSpotRect] = useState<DOMRect | null>(null);
-  const prevElRef = useRef<HTMLElement | null>(null);
-  const tickRef   = useRef<number>(0);
+  const [hole, setHole] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const scrollTimer = useRef<number>(0);
+  const syncTimer   = useRef<number>(0);
 
-  /* Show tour if not seen before */
+  /* ── Mount: show once ── */
   useEffect(() => {
     if (!localStorage.getItem(storageKey)) {
-      const id = window.setTimeout(() => setVisible(true), 700);
-      return () => window.clearTimeout(id);
+      const t = window.setTimeout(() => setVisible(true), 600);
+      return () => window.clearTimeout(t);
     }
   }, [storageKey]);
 
-  /* ── Highlight the target element for the current step ── */
-  const highlight = useCallback((target?: string) => {
-    // Restore previous element
-    if (prevElRef.current) {
-      prevElRef.current.style.position = "";
-      prevElRef.current.style.zIndex   = "";
-      prevElRef.current = null;
-    }
-    setSpotRect(null);
+  /* ── Scroll + measure target element ── */
+  const positionSpotlight = useCallback((target?: string) => {
+    setHole(null);
     if (!target) return;
 
     const el = document.querySelector(`[data-tour="${target}"]`) as HTMLElement | null;
     if (!el) return;
 
-    // Scroll element into view
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Measure current position
+    const rect = el.getBoundingClientRect();
+    const vh   = window.innerHeight;
 
-    // Lift element above overlay
-    el.style.position = "relative";
-    el.style.zIndex   = "9999";
-    prevElRef.current = el;
+    // Desired: element sits just below the sticky header, leaving bottom for tooltip
+    const idealTop   = HEADER_CLEARANCE;
+    const maxAllowedBottom = vh - TOOLTIP_RESERVE - 16;
 
-    // Update rect after scroll settles
-    window.clearTimeout(tickRef.current);
-    tickRef.current = window.setTimeout(() => {
-      if (prevElRef.current) setSpotRect(prevElRef.current.getBoundingClientRect());
-    }, 380);
+    // Calculate how much to scroll
+    let scrollDelta = 0;
+    if (rect.top < idealTop) {
+      // Element is above target position — scroll up
+      scrollDelta = rect.top - idealTop;
+    } else if (rect.bottom > maxAllowedBottom) {
+      // Element bottom would overlap tooltip — scroll down just enough
+      scrollDelta = rect.bottom - maxAllowedBottom;
+    }
+    // No scroll needed if element already in the safe zone
+
+    if (Math.abs(scrollDelta) > 10) {
+      window.scrollBy({ top: scrollDelta, behavior: "smooth" });
+    }
+
+    // Measure after scroll animation completes (600 ms is generous for mobile)
+    window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => {
+      const r = el.getBoundingClientRect();
+      setHole({ x: r.left, y: r.top, w: r.width, h: r.height });
+    }, 620);
   }, []);
 
-  /* When step changes, re-highlight */
+  /* Trigger positioning whenever step or visibility changes */
   useEffect(() => {
-    if (visible) highlight(steps[step]?.target);
+    if (visible) positionSpotlight(steps[step]?.target);
+    return () => {
+      window.clearTimeout(scrollTimer.current);
+      window.clearTimeout(syncTimer.current);
+    };
   }, [visible, step]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* Keep spotlight in sync on scroll/resize */
+  /* Keep spotlight in sync during any residual scroll / resize */
   useEffect(() => {
     if (!visible || !steps[step]?.target) return;
     const sync = () => {
-      if (prevElRef.current) setSpotRect(prevElRef.current.getBoundingClientRect());
+      const el = document.querySelector(`[data-tour="${steps[step].target}"]`) as HTMLElement | null;
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setHole({ x: r.left, y: r.top, w: r.width, h: r.height });
+      }
     };
-    window.addEventListener("scroll",  sync, { passive: true });
-    window.addEventListener("resize",  sync, { passive: true });
+    window.addEventListener("scroll", sync, { passive: true });
+    window.addEventListener("resize", sync, { passive: true });
     return () => {
       window.removeEventListener("scroll", sync);
       window.removeEventListener("resize", sync);
     };
   }, [visible, step, steps]);
 
-  /* ── Advance / finish ── */
+  /* ── Navigation ── */
   function advance() {
-    if (step < steps.length - 1) setStep(s => s + 1);
-    else                         finish();
+    if (step < steps.length - 1) {
+      setHole(null); // clear hole immediately — smoother transition
+      setStep(s => s + 1);
+    } else {
+      finish();
+    }
   }
 
   function finish() {
-    if (prevElRef.current) {
-      prevElRef.current.style.position = "";
-      prevElRef.current.style.zIndex   = "";
-    }
     localStorage.setItem(storageKey, "1");
+    setHole(null);
     setVisible(false);
   }
 
   if (!visible) return null;
 
-  /* ── Geometry ── */
   const cur      = steps[step];
   const isLast   = step === steps.length - 1;
   const isWelcome = !cur.target;
-  const PAD       = 14;
+  const PAD       = 12;
 
-  // Tooltip placement: below spotlight if target is in top half, else above
-  let tipStyle: React.CSSProperties = {};
-  if (spotRect) {
-    const aboveHalf = spotRect.top < window.innerHeight * 0.55;
-    const tipLeft   = Math.max(12,
-      Math.min(spotRect.left, window.innerWidth - 288 - 12)
+  /* Progress dots */
+  function Dots() {
+    return (
+      <div className="flex items-center gap-1.5">
+        {steps.map((_, i) => (
+          <div
+            key={i}
+            className="rounded-full transition-all duration-300"
+            style={{
+              width:      i === step ? 18 : 6,
+              height:     6,
+              background: i === step ? "var(--primary)" : "var(--muted-foreground)",
+              opacity:    i === step ? 1 : 0.4,
+            }}
+          />
+        ))}
+      </div>
     );
-    tipStyle = aboveHalf
-      ? { top:    spotRect.bottom + PAD + 8,  left: tipLeft }
-      : { bottom: window.innerHeight - spotRect.top + PAD + 8, left: tipLeft };
   }
-
-  // Progress dots
-  const Dots = () => (
-    <div className="flex items-center gap-1.5">
-      {steps.map((_, i) => (
-        <div
-          key={i}
-          className="rounded-full transition-all duration-300"
-          style={{
-            width:      i === step ? 18 : 6,
-            height:     6,
-            background: i === step ? "var(--primary)" : "var(--border)",
-          }}
-        />
-      ))}
-    </div>
-  );
 
   return (
     <>
-      {/* ── Overlay layer ── */}
-      <div
-        className="fixed inset-0 z-[9998] cursor-pointer"
-        onClick={advance}
-      >
-        {spotRect ? (
-          /* SVG with mask hole over the target element */
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ display: "block" }}
-          >
-            <defs>
-              <mask id="tour-mask">
-                <rect width="100%" height="100%" fill="white" />
+      {/* ── 1. Visual overlay (SVG with mask hole) — NO pointer events ── */}
+      <div className="fixed inset-0 z-[9998] pointer-events-none">
+        <svg width="100%" height="100%" style={{ display: "block", position: "absolute", inset: 0 }}>
+          <defs>
+            <mask id="sanchamar-tour-mask">
+              {/* White = show overlay; Black = cut out = reveal element */}
+              <rect width="100%" height="100%" fill="white" />
+              {hole && (
                 <rect
-                  x={spotRect.left - PAD}
-                  y={spotRect.top  - PAD}
-                  width={spotRect.width  + PAD * 2}
-                  height={spotRect.height + PAD * 2}
+                  x={hole.x - PAD}
+                  y={hole.y - PAD}
+                  width={hole.w + PAD * 2}
+                  height={hole.h + PAD * 2}
                   rx="14"
                   fill="black"
                 />
-              </mask>
-            </defs>
-            <rect
-              width="100%" height="100%"
-              fill="rgba(0,0,0,0.82)"
-              mask="url(#tour-mask)"
-            />
-          </svg>
-        ) : (
-          /* Full dark backdrop for welcome step */
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-        )}
+              )}
+            </mask>
+          </defs>
+          <rect
+            width="100%" height="100%"
+            fill={isWelcome ? "rgba(0,0,0,0.80)" : "rgba(0,0,0,0.76)"}
+            mask="url(#sanchamar-tour-mask)"
+          />
+        </svg>
       </div>
 
-      {/* ── Spotlight gold ring ── */}
-      {spotRect && (
+      {/* ── 2. Gold ring around spotlight ── */}
+      {hole && (
         <div
-          className="fixed pointer-events-none z-[9999] rounded-2xl transition-all duration-300"
+          className="fixed pointer-events-none rounded-2xl"
           style={{
-            left:      spotRect.left  - PAD,
-            top:       spotRect.top   - PAD,
-            width:     spotRect.width  + PAD * 2,
-            height:    spotRect.height + PAD * 2,
-            boxShadow: "0 0 0 2.5px rgba(196,148,10,0.9), 0 0 24px rgba(196,148,10,0.35)",
+            zIndex:    9999,
+            left:      hole.x - PAD,
+            top:       hole.y - PAD,
+            width:     hole.w + PAD * 2,
+            height:    hole.h + PAD * 2,
+            boxShadow: "0 0 0 2.5px rgba(196,148,10,0.95), 0 0 28px rgba(196,148,10,0.35)",
+            transition: "all 0.35s cubic-bezier(0.34,1.1,0.64,1)",
           }}
         />
       )}
 
-      {/* ── Welcome card (no spotlight) ── */}
+      {/* ── 3. Click catcher — intercepts ALL taps/clicks, advances tour ── */}
+      {/*    This sits ABOVE the overlay and target elements, so nothing      */}
+      {/*    behind it can be accidentally activated during the tour.          */}
+      <div
+        className="fixed inset-0 cursor-pointer"
+        style={{ zIndex: 10000 }}
+        onClick={advance}
+        aria-hidden="true"
+      />
+
+      {/* ── 4a. Welcome card (step 0) — centered modal ── */}
       {isWelcome && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-6 pointer-events-none">
+        <div
+          className="fixed inset-0 flex items-center justify-center px-5"
+          style={{ zIndex: 10001, pointerEvents: "none" }}
+        >
           <div
-            className="bg-card border border-border rounded-3xl p-8 w-full max-w-xs text-center shadow-warm-lg pointer-events-auto"
+            className="bg-card border border-border rounded-3xl p-7 w-full max-w-xs text-center shadow-warm-lg"
+            style={{ pointerEvents: "auto" }}
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center mb-5">
-              <SanchamarLogo variant="mark" height={56} />
+              <SanchamarLogo variant="mark" height={52} />
             </div>
-
-            <h2 className="text-lg font-bold text-foreground mb-1.5">
+            <h2 className="text-lg font-bold text-foreground mb-2">
               {name ? `Welcome, ${name}!` : cur.title}
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
               {cur.body}
             </p>
-
-            <div className="flex justify-center mb-5">
-              <Dots />
-            </div>
-
+            <div className="flex justify-center mb-5"><Dots /></div>
             <button
-              onClick={advance}
+              onClick={(e) => { e.stopPropagation(); advance(); }}
               className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:bg-primary/90 active:scale-[0.98] transition-all"
             >
               Show me how →
             </button>
             <button
-              onClick={finish}
-              className="mt-3 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              onClick={(e) => { e.stopPropagation(); finish(); }}
+              className="mt-3 block mx-auto text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
             >
               Skip tour
             </button>
@@ -238,61 +251,36 @@ export function SpotlightTour({ steps, storageKey, name }: Props) {
         </div>
       )}
 
-      {/* ── Spotlight tooltip card ── */}
-      {!isWelcome && spotRect && (
+      {/* ── 4b. Spotlight tooltip — ALWAYS pinned to bottom of screen ── */}
+      {/*    Safe on every phone because it never depends on element position. */}
+      {!isWelcome && (
         <div
-          className="fixed z-[10000] w-72 pointer-events-auto"
-          style={tipStyle}
+          className="fixed left-3 right-3"
+          style={{ zIndex: 10001, bottom: 24, pointerEvents: "auto" }}
           onClick={e => e.stopPropagation()}
         >
-          {/* Arrow pointing toward element */}
-          {(() => {
-            const aboveHalf = spotRect.top < window.innerHeight * 0.55;
-            return aboveHalf ? (
-              /* Arrow up (tooltip is below element) */
-              <div
-                className="mb-[-1px] ml-5"
-                style={{
-                  width: 0, height: 0,
-                  borderLeft: "8px solid transparent",
-                  borderRight: "8px solid transparent",
-                  borderBottom: "8px solid var(--border)",
-                }}
-              />
-            ) : (
-              /* Arrow down (tooltip is above element) */
-              <div
-                className="mt-[-1px] ml-5"
-                style={{
-                  order: 1,
-                  width: 0, height: 0,
-                  borderLeft: "8px solid transparent",
-                  borderRight: "8px solid transparent",
-                  borderTop: "8px solid var(--border)",
-                }}
-              />
-            );
-          })()}
-
-          <div className="bg-card border border-border rounded-2xl p-4 shadow-warm-lg">
-            <p className="font-semibold text-foreground text-sm mb-1">{cur.title}</p>
+          <div className="bg-card border border-border rounded-2xl px-4 py-4 shadow-warm-lg">
+            {/* Step label */}
+            <p className="text-[10px] font-semibold text-primary uppercase tracking-widest mb-1">
+              Step {step} of {steps.length - 1}
+            </p>
+            <p className="font-bold text-foreground text-sm mb-1">{cur.title}</p>
             <p className="text-muted-foreground text-xs leading-relaxed mb-4">{cur.body}</p>
-
             <div className="flex items-center justify-between">
               <Dots />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={finish}
-                  className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                  onClick={(e) => { e.stopPropagation(); finish(); }}
+                  className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
                 >
                   Skip
                 </button>
                 <button
-                  onClick={advance}
-                  className="flex items-center gap-1 text-xs font-bold bg-primary text-primary-foreground px-3.5 py-1.5 rounded-lg hover:bg-primary/90 active:scale-[0.97] transition-all"
+                  onClick={(e) => { e.stopPropagation(); advance(); }}
+                  className="flex items-center gap-1.5 text-sm font-bold bg-primary text-primary-foreground px-4 py-2.5 rounded-xl hover:bg-primary/90 active:scale-[0.97] transition-all shadow-warm-sm"
                 >
-                  {isLast ? "Got it" : "Next"}
-                  {!isLast && <ChevronRight className="h-3 w-3" />}
+                  {isLast ? "Got it ✓" : "Next"}
+                  {!isLast && <ChevronRight className="h-4 w-4" />}
                 </button>
               </div>
             </div>
