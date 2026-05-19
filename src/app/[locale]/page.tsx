@@ -7,14 +7,14 @@ import {
   ChefHat, Dumbbell, ShoppingCart, Flower2, Car, Wine,
 } from "lucide-react";
 
-/* ── Hero floating icon cloud (right side, desktop) ─── */
+/* ── Hero floating service icons ─── */
 const HERO_FLOATERS = [
-  { Icon: ChefHat,      rot:  4, x: 10, y:  8, dur: 5.5, delay: 0.0, bg: "bg-amber-50/90   dark:bg-amber-950/60", fg: "text-amber-600   dark:text-amber-400" },
-  { Icon: Flower2,      rot: -6, x: 50, y: 22, dur: 7.2, delay: 1.1, bg: "bg-rose-50/90    dark:bg-rose-950/60",  fg: "text-rose-600    dark:text-rose-400"   },
-  { Icon: ShoppingCart, rot:  2, x: 14, y: 54, dur: 6.0, delay: 0.7, bg: "bg-emerald-50/90 dark:bg-emerald-950/60", fg: "text-emerald-600 dark:text-emerald-400" },
-  { Icon: Wine,         rot: -4, x: 72, y: 10, dur: 8.0, delay: 0.4, bg: "bg-red-50/90     dark:bg-red-950/60",   fg: "text-red-600     dark:text-red-400"     },
-  { Icon: Car,          rot:  3, x: 78, y: 52, dur: 5.2, delay: 2.0, bg: "bg-slate-50/90   dark:bg-slate-900/60", fg: "text-slate-600   dark:text-slate-400"   },
-  { Icon: Dumbbell,     rot: -5, x: 36, y: 80, dur: 6.8, delay: 3.0, bg: "bg-violet-50/90  dark:bg-violet-950/60", fg: "text-violet-600  dark:text-violet-400" },
+  { Icon: ChefHat,      rot:  4, x: 8,  y: 10, dur: 5.5, delay: 0.0, bg: "bg-white/15", fg: "text-amber-300" },
+  { Icon: Flower2,      rot: -6, x: 50, y: 25, dur: 7.2, delay: 1.1, bg: "bg-white/12", fg: "text-rose-300"  },
+  { Icon: ShoppingCart, rot:  2, x: 14, y: 58, dur: 6.0, delay: 0.7, bg: "bg-white/12", fg: "text-emerald-300" },
+  { Icon: Wine,         rot: -4, x: 72, y: 8,  dur: 8.0, delay: 0.4, bg: "bg-white/12", fg: "text-red-300"   },
+  { Icon: Car,          rot:  3, x: 78, y: 52, dur: 5.2, delay: 2.0, bg: "bg-white/10", fg: "text-slate-300" },
+  { Icon: Dumbbell,     rot: -5, x: 34, y: 80, dur: 6.8, delay: 3.0, bg: "bg-white/12", fg: "text-violet-300" },
 ];
 
 export default async function LandingPage() {
@@ -35,8 +35,8 @@ export default async function LandingPage() {
 
       {/* ══ Header ══ */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <SanchamarLogo variant="full" height={28} />
+        <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
+          <SanchamarLogo variant="full" height={26} />
           <div className="flex items-center gap-1">
             <LanguageSwitcher />
             <ThemeToggle />
@@ -45,175 +45,215 @@ export default async function LandingPage() {
       </header>
 
       {/* ══ Hero ══ */}
-      <section className="relative overflow-hidden min-h-[92vh] flex items-center">
+      {/*
+        Background is set via inline style so it ALWAYS renders regardless of
+        Tailwind's z-index stacking. We layer:
+          1. Dark navy→golden gradient (sky)
+          2. SVG Malaga silhouette
+          3. Soft gradient fade to page background at bottom
+          4. Content
+      */}
+      <section
+        className="relative overflow-hidden flex items-center"
+        style={{
+          minHeight: "82vh",
+          background: "linear-gradient(175deg, #0b1628 0%, #122040 30%, #1e3060 55%, #7a4e0a 78%, #c4940a 90%, #d4a017 100%)",
+        }}
+      >
+        {/* ── Stars (tiny white dots scattered in sky) ── */}
+        {[
+          [8,4],[15,12],[23,7],[31,3],[42,9],[54,5],[63,11],[71,6],[82,3],[90,8],
+          [6,18],[18,22],[29,16],[48,19],[57,14],[69,20],[78,13],[88,17],[96,7],
+          [12,28],[35,25],[50,30],[65,24],[80,27],[93,22],[4,32],[22,35],[45,38],
+        ].map(([x, y], i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white animate-pulse"
+            style={{
+              width: i % 7 === 0 ? 2 : 1,
+              height: i % 7 === 0 ? 2 : 1,
+              left: `${x}%`, top: `${y}%`,
+              opacity: 0.5 + (i % 4) * 0.12,
+              animationDuration: `${2 + (i % 3)}s`,
+              animationDelay: `${(i * 0.4) % 3}s`,
+            }}
+          />
+        ))}
 
-        {/* ── Malaga skyline SVG background ── */}
-        <div className="absolute inset-0 -z-20">
-          {/* Sky gradient: warm Mediterranean dawn */}
-          <div className="absolute inset-0 bg-gradient-to-b
-            from-[#1a2744] via-[#2d3e6e] to-[#8b6914]
-            dark:from-[#0d1525] dark:via-[#1a2540] dark:to-[#3d2e08]
-            opacity-90 dark:opacity-95" />
+        {/* ── Malaga skyline SVG ── */}
+        <svg
+          viewBox="0 0 1440 420"
+          preserveAspectRatio="xMidYMax slice"
+          className="absolute inset-x-0 bottom-0 w-full pointer-events-none"
+          aria-hidden="true"
+        >
+          {/* Subtle horizon atmospheric glow */}
+          <ellipse cx="720" cy="330" rx="800" ry="80" fill="#c4940a" opacity="0.22"/>
+          <ellipse cx="720" cy="360" rx="600" ry="50" fill="#e8b820" opacity="0.12"/>
 
-          {/* Stars layer (subtle, dark mode only) */}
-          <div className="absolute inset-0 opacity-0 dark:opacity-100">
-            {[...Array(35)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute rounded-full bg-white animate-pulse"
-                style={{
-                  width: i % 5 === 0 ? 2 : 1,
-                  height: i % 5 === 0 ? 2 : 1,
-                  left: `${(i * 37 + 3) % 98}%`,
-                  top:  `${(i * 23 + 5) % 55}%`,
-                  opacity: 0.4 + (i % 4) * 0.15,
-                  animationDuration: `${2 + (i % 3)}s`,
-                  animationDelay: `${(i * 0.3) % 2}s`,
-                }}
-              />
-            ))}
-          </div>
+          {/* ── Gibralfaro Hill ── */}
+          <path d="M0 260 Q80 150 180 145 Q230 142 280 160 L320 280 L0 280 Z"
+            fill="#0c1929" />
 
-          {/* Malaga skyline silhouette SVG */}
-          <svg
-            viewBox="0 0 1440 480"
-            preserveAspectRatio="xMidYMax slice"
-            className="absolute bottom-0 left-0 right-0 w-full"
-            fill="none"
-          >
-            {/* Sea / harbour */}
-            <rect x="0" y="370" width="1440" height="110" fill="#0d2a52" opacity="0.9"/>
-            <rect x="0" y="370" width="1440" height="8" fill="#1a4a8a" opacity="0.6"/>
+          {/* ── Alcazaba fortress ── */}
+          {/* Main walls */}
+          <path d="M55 255 L55 200 L220 200 L220 255 Z" fill="#0e1e35"/>
+          {/* Crenellations */}
+          {[60,76,92,108,124,140,156,172,188,204].map((x, i) => (
+            <rect key={i} x={x} y={188} width="10" height="16" rx="1" fill="#0e1e35"/>
+          ))}
+          {/* Main tower */}
+          <rect x="110" y="155" width="38" height="50" rx="2" fill="#0c1929"/>
+          <path d="M108 155 Q129 132 150 155 Z" fill="#0c1929"/>
+          {/* Tower window */}
+          <rect x="122" y="168" width="12" height="16" rx="2" fill="#c4940a" opacity="0.5"/>
+          {/* Rampart */}
+          <path d="M50 255 L50 230 L80 230 L80 255" fill="#0e1e35"/>
+          <path d="M190 255 L190 230 L220 230 L220 255" fill="#0e1e35"/>
 
-            {/* Horizon glow */}
-            <ellipse cx="720" cy="375" rx="600" ry="60" fill="#c4940a" opacity="0.18"/>
+          {/* ── Hillside white buildings (Malaga old town) ── */}
+          {/* Cascading buildings up the hill */}
+          <rect x="250" y="215" width="28" height="65" rx="2" fill="#0f1e36"/>
+          <rect x="272" y="205" width="24" height="75" rx="2" fill="#0e1c33"/>
+          <rect x="290" y="220" width="32" height="60" rx="2" fill="#0f2038"/>
+          <rect x="315" y="210" width="22" height="70" rx="2" fill="#0e1c33"/>
+          <rect x="332" y="225" width="30" height="55" rx="2" fill="#101f35"/>
+          <rect x="357" y="215" width="25" height="65" rx="2" fill="#0f1e36"/>
+          <rect x="376" y="230" width="28" height="50" rx="2" fill="#0e1c33"/>
 
-            {/* Cerro de Gibralfaro hill - far left */}
-            <path d="M0 300 Q60 180 150 170 Q200 165 250 180 L300 320 L0 320 Z"
-              fill="#0f1e38" opacity="0.95"/>
+          {/* ── Malaga Cathedral ── */}
+          {/* Nave */}
+          <rect x="480" y="185" width="140" height="145" rx="3" fill="#0d1b32"/>
+          {/* Façade details - arched windows */}
+          <path d="M510 220 Q523 205 536 220 L536 245 L510 245 Z" fill="#c4940a" opacity="0.3"/>
+          <path d="M544 220 Q557 205 570 220 L570 245 L544 245 Z" fill="#c4940a" opacity="0.3"/>
+          <path d="M578 220 Q591 205 604 220 L604 245 L578 245 Z" fill="#c4940a" opacity="0.3"/>
+          {/* Rose window */}
+          <circle cx="552" cy="268" r="20" fill="none" stroke="#c4940a" strokeWidth="1.5" opacity="0.5"/>
+          <circle cx="552" cy="268" r="12" fill="none" stroke="#c4940a" strokeWidth="1" opacity="0.35"/>
+          {/* Left tower (complete) */}
+          <rect x="476" y="130" width="46" height="60" rx="2" fill="#0c1929"/>
+          <path d="M474 130 L499 100 L524 130 Z" fill="#0c1929"/>
+          {/* Right tower (shorter — historically unfinished) */}
+          <rect x="618" y="155" width="46" height="38" rx="2" fill="#0c1929"/>
+          {/* Tower lights / gold glow */}
+          <rect x="490" y="145" width="18" height="24" rx="2" fill="#c4940a" opacity="0.35"/>
+          <rect x="630" y="168" width="18" height="16" rx="2" fill="#c4940a" opacity="0.3"/>
 
-            {/* Alcazaba fortress */}
-            <path d="M80 280 L80 230 L92 230 L92 218 L104 218 L104 208 L116 208
-                     L116 218 L128 218 L128 208 L140 208 L140 218 L152 218 L152 230
-                     L164 230 L164 280 Z" fill="#0a1628" opacity="0.98"/>
-            {/* Alcazaba crenellations */}
-            {[86,100,114,128,142,156].map((x, i) => (
-              <rect key={i} x={x} y={200} width="8" height="14" fill="#0a1628" opacity="0.98"/>
-            ))}
-            {/* Alcazaba tower */}
-            <rect x="96" y="175" width="28" height="55" rx="2" fill="#0c1b30" opacity="0.95"/>
-            <path d="M96 175 Q110 158 124 175 Z" fill="#0c1b30" opacity="0.95"/>
+          {/* ── Buildings east of Cathedral ── */}
+          {[700,725,750,778,803,828,854,880,906,932,958,984,1010].map((x, i) => (
+            <rect
+              key={i}
+              x={x} y={230 + (i % 4) * 12}
+              width={18 + (i % 5) * 5}
+              height={100 - (i % 4) * 12}
+              rx="1"
+              fill={i % 3 === 0 ? "#0e1c33" : "#0f1e36"}
+            />
+          ))}
 
-            {/* White buildings - left hillside cluster */}
-            <rect x="190" y="260" width="35" height="70" rx="2" fill="#0d1e38" opacity="0.9"/>
-            <rect x="215" y="245" width="28" height="85" rx="2" fill="#0d1e38" opacity="0.88"/>
-            <rect x="235" y="255" width="40" height="75" rx="2" fill="#0c1c36" opacity="0.9"/>
-            <rect x="265" y="240" width="22" height="90" rx="2" fill="#0d1e38" opacity="0.88"/>
+          {/* ── Paseo del Parque palm trees ── */}
+          {[420,500,580,660,740,830,920,1010,1100,1190].map((x, i) => (
+            <g key={i}>
+              <rect x={x - 2} y={285 + (i%2)*6} width="5" height={50-(i%2)*6} rx="2" fill="#0a1525"/>
+              {/* Palm fronds */}
+              <path
+                d={`M${x+1} ${283+(i%2)*6}
+                  Q${x-20} ${265+(i%2)*6} ${x-28} ${260+(i%2)*6}
+                  M${x+1} ${283+(i%2)*6}
+                  Q${x+20} ${265+(i%2)*6} ${x+28} ${260+(i%2)*6}
+                  M${x+1} ${283+(i%2)*6}
+                  Q${x} ${258+(i%2)*6} ${x-2} ${252+(i%2)*6}
+                  M${x+1} ${283+(i%2)*6}
+                  Q${x-12} ${272+(i%2)*6} ${x-20} ${272+(i%2)*6}
+                  M${x+1} ${283+(i%2)*6}
+                  Q${x+12} ${272+(i%2)*6} ${x+20} ${272+(i%2)*6}`}
+                stroke="#0a1525" strokeWidth="2.5" strokeLinecap="round"/>
+            </g>
+          ))}
 
-            {/* Cathedral - Malaga Catedral dome and towers */}
-            <rect x="550" y="220" width="120" height="150" rx="3" fill="#0a1628"/>
-            {/* Rose window */}
-            <circle cx="610" cy="270" r="18" fill="#0e2040" opacity="0.8"/>
-            {/* Left tower */}
-            <rect x="548" y="160" width="38" height="65" rx="2" fill="#0c1b30"/>
-            <path d="M548 160 L567 130 L586 160 Z" fill="#0c1b30"/>
-            {/* Right tower (famous unfinished) */}
-            <rect x="634" y="185" width="38" height="38" rx="2" fill="#0c1b30"/>
-            {/* Cathedral flying buttresses */}
-            <path d="M550 280 L510 310 L510 320 L550 305 Z" fill="#0a1628" opacity="0.7"/>
-            <path d="M670 280 L710 310 L710 320 L670 305 Z" fill="#0a1628" opacity="0.7"/>
+          {/* ── Port / Muelle Uno area ── */}
+          <rect x="1100" y="220" width="70" height="140" rx="2" fill="#0e1c33"/>
+          <rect x="1164" y="240" width="55" height="120" rx="2" fill="#0d1b32"/>
+          <rect x="1212" y="210" width="90" height="150" rx="2" fill="#0e1c33"/>
+          <rect x="1296" y="245" width="65" height="115" rx="2" fill="#0d1a30"/>
+          <rect x="1355" y="225" width="85" height="135" rx="2" fill="#0e1c33"/>
+          {/* Port crane */}
+          <path d="M1370 200 L1374 100 L1440 95 L1440 200 Z" fill="#091422"/>
+          <line x1="1374" y1="100" x2="1374" y2="200" stroke="#091422" strokeWidth="5"/>
+          <line x1="1374" y1="100" x2="1440" y2="95" stroke="#091422" strokeWidth="2.5"/>
+          {[1395,1412,1428].map((x, i) => (
+            <line key={i} x1={x} y1="95" x2={x} y2="200" stroke="#091422" strokeWidth="1.5" opacity="0.7"/>
+          ))}
 
-            {/* Dense white building cluster - right of cathedral */}
-            {[720,748,772,798,822,846,870,894,918,942,966].map((x, i) => (
-              <rect
-                key={i} x={x} y={250 + (i % 3) * 18}
-                width={20 + (i % 4) * 8}
-                height={120 - (i % 3) * 18}
-                rx="1" fill="#0c1b30" opacity="0.88 + (i % 3) * 0.03"/>
-            ))}
+          {/* ── Sea ── */}
+          <rect x="0" y="330" width="1440" height="90" fill="#061018"/>
+          {/* Sea shimmer reflections */}
+          <path d="M0 340 Q180 334 360 341 Q540 348 720 338 Q900 328 1080 340 Q1260 352 1440 342"
+            stroke="#c4940a" strokeWidth="1.5" opacity="0.18" fill="none"/>
+          <path d="M0 352 Q200 346 400 354 Q600 362 800 350 Q1000 338 1200 352 Q1380 364 1440 355"
+            stroke="#c4940a" strokeWidth="1" opacity="0.1" fill="none"/>
+          <path d="M0 364 Q240 358 480 366 Q720 374 960 362 Q1200 350 1440 362"
+            stroke="#e8b820" strokeWidth="0.8" opacity="0.08" fill="none"/>
 
-            {/* Paseo del Parque palm trees */}
-            {[320,410,490,580,640,750,820,920,1020,1120].map((x, i) => (
-              <g key={i}>
-                {/* Trunk */}
-                <rect x={x - 2} y={310 + (i%2)*8} width="5" height={52 - (i%2)*8} rx="2" fill="#0a1628" opacity="0.9"/>
-                {/* Fronds */}
-                <path
-                  d={`M${x+1},${308+(i%2)*8} Q${x-22},${288+(i%2)*8} ${x-30},${282+(i%2)*8}
-                      M${x+1},${308+(i%2)*8} Q${x+22},${288+(i%2)*8} ${x+30},${282+(i%2)*8}
-                      M${x+1},${308+(i%2)*8} Q${x},${280+(i%2)*8} ${x-2},${274+(i%2)*8}
-                      M${x+1},${308+(i%2)*8} Q${x-14},${296+(i%2)*8} ${x-24},${296+(i%2)*8}
-                      M${x+1},${308+(i%2)*8} Q${x+14},${296+(i%2)*8} ${x+24},${296+(i%2)*8}`}
-                  stroke="#0a1628" strokeWidth="3" strokeLinecap="round" opacity="0.9"/>
-              </g>
-            ))}
+          {/* ── Quay promenade ── */}
+          <rect x="0" y="326" width="1440" height="10" fill="#08121f"/>
 
-            {/* Right: modern port area buildings */}
-            <rect x="1100" y="240" width="60" height="130" rx="2" fill="#0c1b30" opacity="0.9"/>
-            <rect x="1150" y="260" width="45" height="110" rx="2" fill="#0a1628" opacity="0.85"/>
-            <rect x="1190" y="230" width="80" height="140" rx="2" fill="#0c1b30" opacity="0.9"/>
-            <rect x="1265" y="280" width="60" height="90" rx="2"  fill="#0a1628" opacity="0.85"/>
-            <rect x="1320" y="250" width="120" height="120" rx="2" fill="#0c1b30" opacity="0.88"/>
+          {/* ── Lighthouse glow ── */}
+          <circle cx="1200" cy="218" r="4" fill="#e8b820" opacity="0.9"/>
+          <circle cx="1200" cy="218" r="12" fill="#c4940a" opacity="0.25"/>
+        </svg>
 
-            {/* Muelle Uno / port crane silhouette */}
-            <path d="M1350 230 L1355 150 L1420 145 L1440 230 Z" fill="#090f1e" opacity="0.9"/>
-            <path d="M1355 150 L1355 230" stroke="#090f1e" strokeWidth="4" opacity="0.95"/>
-            <path d="M1355 150 L1440 145" stroke="#090f1e" strokeWidth="2" opacity="0.9"/>
-            <path d="M1380 145 L1380 230" stroke="#090f1e" strokeWidth="1.5" opacity="0.7"/>
-            <path d="M1405 145 L1405 230" stroke="#090f1e" strokeWidth="1.5" opacity="0.7"/>
-
-            {/* Harbour water reflections */}
-            <path d="M200 385 Q360 378 520 385 Q680 392 840 383 Q1000 374 1160 382 Q1320 390 1440 380"
-              stroke="#1a4a8a" strokeWidth="1.5" opacity="0.5"/>
-            <path d="M0 395 Q200 388 400 396 Q600 404 800 392 Q1000 380 1200 393 Q1350 402 1440 395"
-              stroke="#1a4a8a" strokeWidth="1" opacity="0.3"/>
-
-            {/* Foreground: quay / promenade */}
-            <rect x="0" y="358" width="1440" height="20" fill="#06101e" opacity="0.95"/>
-          </svg>
-        </div>
-
-        {/* ── Overlay: smooth fade into page background at bottom ── */}
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background to-transparent -z-10" />
-
-        {/* ── Golden horizon glow ── */}
-        <div className="absolute bottom-28 left-0 right-0 h-32 bg-gradient-to-t from-primary/15 to-transparent -z-10" />
+        {/* ── Fade to page background at bottom ── */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-32 pointer-events-none"
+          style={{ background: "linear-gradient(to top, var(--background) 0%, transparent 100%)" }}
+        />
 
         {/* ── Content ── */}
-        <div className="max-w-6xl mx-auto px-5 py-24 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-5 py-16 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
-            {/* Left: Text (always on dark sky background now) */}
+            {/* Left: Text */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 mb-8 backdrop-blur-sm">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="text-xs font-medium text-primary tracking-wide uppercase">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/25 backdrop-blur-sm mb-6">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-pulse" />
+                <span className="text-xs font-medium text-white/90 tracking-wide uppercase">
                   {t("badge")}
                 </span>
               </div>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.06] mb-6 text-white">
-                {before},
+              {/* Headline */}
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.06] mb-5">
+                <span className="text-white drop-shadow-sm">{before},</span>
                 <br />
-                <span className="text-gradient">{after}</span>
+                <span
+                  className="font-bold"
+                  style={{
+                    background: "linear-gradient(135deg, #f0c040 0%, #c4940a 50%, #e8b820 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >{after}</span>
               </h1>
 
-              <p className="text-lg md:text-xl text-white/70 leading-relaxed mb-10 max-w-lg">
+              <p className="text-base md:text-lg text-white/70 leading-relaxed mb-8 max-w-md">
                 {t("subtext")}
               </p>
 
-              <div className="inline-flex items-start gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-5 py-4 max-w-md">
-                <div className="mt-0.5 w-5 h-5 rounded-full bg-primary/30 flex items-center justify-center flex-shrink-0">
-                  <SanchamarLogo variant="mark" height={16} />
-                </div>
-                <p className="text-sm text-white/75 leading-relaxed">
+              {/* Notice card */}
+              <div className="inline-flex items-start gap-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3.5 max-w-sm">
+                <SanchamarLogo variant="mark" height={18} className="mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-white/70 leading-relaxed">
                   {t("notice")}
                 </p>
               </div>
             </div>
 
             {/* Right: Floating icons */}
-            <div className="relative h-[460px] hidden lg:block">
+            <div className="relative h-[380px] hidden lg:block">
               {HERO_FLOATERS.map(({ Icon, rot, x, y, dur, delay, bg, fg }, i) => (
                 <div
                   key={i}
@@ -225,20 +265,22 @@ export default async function LandingPage() {
                     animationDelay: `${delay}s`,
                   }}
                 >
-                  <div className={`w-16 h-16 rounded-2xl ${bg} backdrop-blur-sm flex items-center justify-center border border-white/25 shadow-warm`}>
-                    <Icon className={`h-7 w-7 ${fg}`} />
+                  <div className={`w-14 h-14 rounded-2xl ${bg} backdrop-blur-md flex items-center justify-center border border-white/20`}>
+                    <Icon className={`h-6 w-6 ${fg}`} />
                   </div>
                 </div>
               ))}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary/15 blur-3xl" />
+              {/* Central glow */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
             </div>
+
           </div>
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/40">
-          <div className="w-5 h-8 rounded-full border-2 border-current flex items-start justify-center pt-1.5">
-            <div className="w-1 h-2 rounded-full bg-current animate-bounce" />
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/40 flex flex-col items-center gap-1">
+          <div className="w-5 h-7 rounded-full border-2 border-current flex items-start justify-center pt-1.5">
+            <div className="w-1 h-1.5 rounded-full bg-current animate-bounce" />
           </div>
         </div>
       </section>
@@ -247,10 +289,10 @@ export default async function LandingPage() {
       <LandingInteractive services={services} />
 
       {/* ══ Footer ══ */}
-      <footer className="border-t border-border py-8 bg-muted/20">
+      <footer className="border-t border-border py-6 bg-muted/20">
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <SanchamarLogo variant="mark" height={24} />
+          <div className="flex items-center gap-2.5">
+            <SanchamarLogo variant="mark" height={22} />
             <p className="text-xs text-muted-foreground/70">Sanchamar · Private Concierge Malaga</p>
           </div>
           <div className="flex items-center gap-1.5">

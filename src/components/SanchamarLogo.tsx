@@ -10,42 +10,32 @@ interface Props {
 }
 
 /**
- * Sanchamar brand logo.
- * The JPG assets have a white background — we wrap them in a white pill so
- * they look intentional in both light and dark mode.
+ * Sanchamar brand logo — transparent PNG, seamlessly blends with any background.
  */
 export function SanchamarLogo({ variant = "mark", height = 32, className }: Props) {
   if (variant === "full") {
-    // wordmark is ~5:1 aspect ratio
-    const w = Math.round(height * 5);
+    // wordmark is approximately 5:1 aspect ratio
+    const w = Math.round(height * 5.2);
     return (
-      <div className={cn("bg-white rounded-lg px-2.5 py-1 shadow-warm-sm inline-flex", className)}>
-        <Image
-          src="/sanchamar-logo.jpg"
-          alt="Sanchamar"
-          width={w}
-          height={height}
-          className="object-contain"
-          priority
-        />
-      </div>
+      <Image
+        src="/sanchamar-logo.png"
+        alt="Sanchamar"
+        width={w}
+        height={height}
+        className={cn("object-contain", className)}
+        priority
+      />
     );
   }
 
-  // monogram is ~1:1
   return (
-    <div
-      className={cn("bg-white rounded-xl shadow-warm-sm inline-flex items-center justify-center overflow-hidden", className)}
-      style={{ width: height, height }}
-    >
-      <Image
-        src="/sanchamar-s.jpg"
-        alt="Sanchamar"
-        width={height}
-        height={height}
-        className="object-contain"
-        priority
-      />
-    </div>
+    <Image
+      src="/sanchamar-s.png"
+      alt="Sanchamar"
+      width={height}
+      height={height}
+      className={cn("object-contain", className)}
+      priority
+    />
   );
 }

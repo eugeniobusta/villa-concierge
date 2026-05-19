@@ -150,9 +150,9 @@ export default function LandingInteractive({ services }: Props) {
       </section>
 
       {/* ── Services grid ── */}
-      <section className="max-w-6xl mx-auto px-5 py-20">
+      <section className="max-w-6xl mx-auto px-5 py-12">
         {/* Section header */}
-        <div className="flex items-center gap-4 mb-12">
+        <div className="flex items-center gap-4 mb-8">
           <div className="h-px flex-1 bg-border" />
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.18em]">
             Available Services
