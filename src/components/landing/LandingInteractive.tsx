@@ -3,8 +3,9 @@
 import { useRef, useState, useCallback } from "react";
 import {
   ChefHat, Sparkles, ShoppingCart, Dumbbell, Flower2,
-  Car, Map, Wine, Baby, Waves, ArrowRight,
+  Car, Map, Wine, Baby, Waves, ArrowRight, X,
 } from "lucide-react";
+import { GuestCodeInput } from "@/components/landing/GuestCodeInput";
 
 /* ─── types ─────────────────────────────────────────────── */
 export interface ServiceData {
@@ -15,6 +16,7 @@ export interface ServiceData {
 
 interface Props {
   services: ServiceData[];
+  locale:   string;
 }
 
 /* ─── icon config ────────────────────────────────────────── */
@@ -56,10 +58,12 @@ function TiltCard({
   children,
   className,
   delay,
+  onClick,
 }: {
   children: React.ReactNode;
   className?: string;
   delay: number;
+  onClick?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState<React.CSSProperties>({});
@@ -87,6 +91,7 @@ function TiltCard({
       ref={ref}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
+      onClick={onClick}
       className={className}
       style={{
         ...tilt,
@@ -141,8 +146,37 @@ function MarqueeRow({
 
 /* ─── Main export ────────────────────────────────────────── */
 export default function LandingInteractive({ services }: Props) {
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <>
+      {/* ── Service access modal ── */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-5"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-card border border-border rounded-3xl p-7 w-full max-w-sm shadow-warm-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-foreground font-semibold text-base">Access your services</h3>
+                <p className="text-muted-foreground text-xs mt-1">
+                  Enter the code your host shared or scan your villa&apos;s QR code.
+                </p>
+              </div>
+              <button onClick={() => setShowModal(false)}
+                className="text-muted-foreground hover:text-foreground mt-0.5 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <GuestCodeInput />
+          </div>
+        </div>
+      )}
+
       {/* ── Marquee band ── */}
       <section className="py-2 border-y border-border bg-muted/30 overflow-hidden">
         <MarqueeRow services={services} reverse={false} speed={55} />
@@ -155,7 +189,7 @@ export default function LandingInteractive({ services }: Props) {
         <div className="flex items-center gap-4 mb-8">
           <div className="h-px flex-1 bg-border" />
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.18em]">
-            Available Services
+            Servicios · Services · Dienstleistungen
           </p>
           <div className="h-px flex-1 bg-border" />
         </div>
@@ -170,8 +204,9 @@ export default function LandingInteractive({ services }: Props) {
               <TiltCard
                 key={svc.key}
                 delay={i * 0.05}
+                onClick={() => setShowModal(true)}
                 className="group relative bg-card border border-border rounded-2xl p-5 shadow-warm-sm
-                           hover:shadow-warm hover:border-primary/35 cursor-default overflow-hidden"
+                           hover:shadow-warm hover:border-primary/35 cursor-pointer overflow-hidden"
               >
                 {/* Hover glow overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/6 to-transparent
