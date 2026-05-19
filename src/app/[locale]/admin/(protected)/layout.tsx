@@ -22,10 +22,17 @@ export default async function ProtectedAdminLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-  const userEmail  = user?.email?.trim().toLowerCase();
+  // ADMIN_EMAIL supports a single email or a comma-separated list:
+  //   ADMIN_EMAIL=alice@example.com
+  //   ADMIN_EMAIL=alice@example.com,bob@example.com
+  const adminEmails = (process.env.ADMIN_EMAIL ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
 
-  if (!user || !adminEmail || userEmail !== adminEmail) {
+  const userEmail = user?.email?.trim().toLowerCase();
+
+  if (!user || adminEmails.length === 0 || !userEmail || !adminEmails.includes(userEmail)) {
     redirect(`/${locale}/admin/login`);
   }
 
