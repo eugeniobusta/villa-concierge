@@ -1,10 +1,8 @@
 "use client";
 
-// Client component: handles the category filter tab state.
-// All data is passed in as props — the server did the fetching.
-
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { Service, ServiceCategory } from "@/types/database";
 import {
@@ -13,16 +11,9 @@ import {
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  "chef-hat": ChefHat,
-  sparkles: Sparkles,
-  "shopping-cart": ShoppingCart,
-  dumbbell: Dumbbell,
-  "flower-2": Flower2,
-  car: Car,
-  map: Map,
-  wine: Wine,
-  baby: Baby,
-  waves: Waves,
+  "chef-hat": ChefHat, sparkles: Sparkles, "shopping-cart": ShoppingCart,
+  dumbbell: Dumbbell, "flower-2": Flower2, car: Car, map: Map,
+  wine: Wine, baby: Baby, waves: Waves,
 };
 
 interface Props {
@@ -32,16 +23,22 @@ interface Props {
   token: string;
 }
 
-// Format price display based on price_unit
-function priceLabel(price: number, unit: string) {
-  const fmt = `€${price % 1 === 0 ? price : price.toFixed(2)}`;
+function priceLabel(price: number, unit: string, locale: string) {
+  const fmt = price.toLocaleString(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
   if (unit === "per_hour") return `${fmt}/hr`;
   if (unit === "per_session") return `${fmt}/session`;
-  if (unit === "flat") return `${fmt} delivery`;
+  if (unit === "flat") return fmt;
   return fmt;
 }
 
+// Pick the right language from a multilingual JSONB object, falling back to English
+function pick(obj: Record<string, string>, locale: string): string {
+  return obj[locale] ?? obj.en ?? "";
+}
+
 export default function ServicesGrid({ categories, services, locale, token }: Props) {
+  const t  = useTranslations("guest.home");
+  const currentLocale = useLocale();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const filtered = activeCategory
@@ -51,7 +48,7 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
   return (
     <div>
       {/* Category filter tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 mb-8 scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto pb-1 mb-8">
         <button
           onClick={() => setActiveCategory(null)}
           className={cn(
@@ -61,7 +58,7 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
               : "bg-white text-stone-500 border-stone-200 hover:border-stone-300"
           )}
         >
-          All
+          {t("all")}
         </button>
         {categories.map((cat) => (
           <button
@@ -74,24 +71,22 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
                 : "bg-white text-stone-500 border-stone-200 hover:border-stone-300"
             )}
           >
-            {(cat.name as Record<string, string>).en}
+            {pick(cat.name as Record<string, string>, currentLocale)}
           </button>
         ))}
       </div>
 
       {/* Services grid */}
       {filtered.length === 0 ? (
-        <p className="text-stone-400 text-sm text-center py-12">
-          No services available in this category.
-        </p>
+        <p className="text-stone-400 text-sm text-center py-12">—</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {filtered.map((svc) => {
             const catIcon = categories.find((c) => c.id === svc.category_id)?.icon ?? "";
-            const Icon = ICON_MAP[catIcon] ?? HelpCircle;
-            const name = (svc.name as Record<string, string>).en;
-            const desc = svc.description
-              ? (svc.description as Record<string, string>).en
+            const Icon    = ICON_MAP[catIcon] ?? HelpCircle;
+            const name    = pick(svc.name as Record<string, string>, currentLocale);
+            const desc    = svc.description
+              ? pick(svc.description as Record<string, string>, currentLocale)
               : null;
 
             return (
@@ -103,16 +98,12 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
                 <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3 group-hover:bg-amber-100 transition-colors">
                   <Icon className="h-5 w-5 text-amber-700" />
                 </div>
-                <p className="font-medium text-stone-800 text-sm leading-tight mb-0.5">
-                  {name}
-                </p>
+                <p className="font-medium text-stone-800 text-sm leading-tight mb-0.5">{name}</p>
                 {desc && (
-                  <p className="text-xs text-stone-400 leading-tight mb-2 line-clamp-2">
-                    {desc}
-                  </p>
+                  <p className="text-xs text-stone-400 leading-tight mb-2 line-clamp-2">{desc}</p>
                 )}
                 <p className="text-xs font-semibold text-amber-700">
-                  {priceLabel(svc.base_price, svc.price_unit)}
+                  {priceLabel(svc.base_price, svc.price_unit, locale)}
                 </p>
               </Link>
             );

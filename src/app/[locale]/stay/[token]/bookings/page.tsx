@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { getActiveSession, formatDate } from "@/lib/guest-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPaymentIntentAction } from "@/actions/payments";
@@ -31,7 +32,10 @@ export default async function MyBookingsPage({
 }) {
   const { locale, token } = await params;
   const { error: pageError } = await searchParams;
-  const session = await getActiveSession(token);
+  const [session, t] = await Promise.all([
+    getActiveSession(token),
+    getTranslations("guest.bookings"),
+  ]);
   if (!session) notFound();
 
   const db = createAdminClient();
@@ -80,7 +84,7 @@ export default async function MyBookingsPage({
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-stone-900">My Bookings</h1>
+        <h1 className="text-2xl font-semibold text-stone-900">{t("title")}</h1>
         <p className="text-stone-400 text-sm mt-1">{session.guest_name}</p>
       </div>
 
@@ -92,12 +96,9 @@ export default async function MyBookingsPage({
 
       {!bookings?.length ? (
         <div className="text-center py-16 border-2 border-dashed border-stone-200 rounded-2xl">
-          <p className="text-stone-400 mb-3">No bookings yet.</p>
-          <Link
-            href={`/${locale}/stay/${token}`}
-            className="text-sm text-amber-600 hover:underline font-medium"
-          >
-            Browse services →
+          <p className="text-stone-400 mb-3">{t("empty")}</p>
+          <Link href={`/${locale}/stay/${token}`} className="text-sm text-amber-600 hover:underline font-medium">
+            {t("browse")}
           </Link>
         </div>
       ) : (
@@ -115,7 +116,7 @@ export default async function MyBookingsPage({
                     <p className="font-medium text-stone-800">{serviceName}</p>
                     {providerName && (
                       <p className="text-xs text-stone-400 mt-0.5">
-                        with {providerName}
+                        {t("with", { name: providerName })}
                       </p>
                     )}
                     <p className="text-xs text-stone-400 mt-1">
@@ -154,7 +155,7 @@ export default async function MyBookingsPage({
                         type="submit"
                         className="w-full text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-xl transition-colors"
                       >
-                        Pay €{b.total_amount.toFixed(2)} to confirm
+                        {t("payToConfirm", { amount: b.total_amount.toFixed(2) })}
                       </button>
                     </form>
                   </div>

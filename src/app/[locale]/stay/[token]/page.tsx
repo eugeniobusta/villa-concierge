@@ -2,6 +2,7 @@
 // React.cache() in getActiveSession() means no duplicate DB calls even
 // though the layout already called it.
 
+import { getTranslations } from "next-intl/server";
 import { getActiveSession } from "@/lib/guest-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import ServicesGrid from "@/components/guest/ServicesGrid";
@@ -15,7 +16,10 @@ export default async function GuestHomePage({
   const { locale, token } = await params;
 
   // Second call — returns cached result, no extra DB hit
-  const session = await getActiveSession(token);
+  const [session, t] = await Promise.all([
+    getActiveSession(token),
+    getTranslations("guest.home"),
+  ]);
   if (!session) notFound();
 
   const db = createAdminClient();
@@ -35,10 +39,8 @@ export default async function GuestHomePage({
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-stone-900">Services</h1>
-        <p className="text-stone-400 text-sm mt-1">
-          Book any service — we&apos;ll confirm and arrange everything.
-        </p>
+        <h1 className="text-2xl font-semibold text-stone-900">{t("title")}</h1>
+        <p className="text-stone-400 text-sm mt-1">{t("subtitle")}</p>
       </div>
 
       <ServicesGrid

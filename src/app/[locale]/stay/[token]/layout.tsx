@@ -2,6 +2,7 @@
 // It validates the token and stay dates on EVERY request.
 // Children never render if the token is invalid or the stay has ended.
 
+import { getTranslations } from "next-intl/server";
 import { getActiveSession } from "@/lib/guest-session";
 import GuestHeader from "@/components/guest/GuestHeader";
 import { Lock } from "lucide-react";
@@ -14,7 +15,10 @@ export default async function GuestLayout({
   params: Promise<{ locale: string; token: string }>;
 }) {
   const { locale, token } = await params;
-  const session = await getActiveSession(token);
+  const [session, t] = await Promise.all([
+    getActiveSession(token),
+    getTranslations("guest.access"),
+  ]);
 
   if (!session) {
     return (
@@ -24,11 +28,10 @@ export default async function GuestLayout({
             <Lock className="h-6 w-6 text-stone-400" />
           </div>
           <h1 className="text-xl font-semibold text-stone-800 mb-2">
-            Access unavailable
+            {t("title")}
           </h1>
           <p className="text-stone-500 text-sm leading-relaxed">
-            This link is only active during your stay dates. If you believe
-            this is an error, please contact your host.
+            {t("message")}
           </p>
         </div>
       </div>

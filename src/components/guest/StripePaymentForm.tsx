@@ -5,6 +5,7 @@
 // touch your server. That's how PCI compliance works.
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -33,6 +34,7 @@ interface Props {
 function CheckoutForm({ returnUrl }: { returnUrl: string }) {
   const stripe   = useStripe();
   const elements = useElements();
+  const t        = useTranslations("guest.payment");
   const [error,   setError]   = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -78,11 +80,11 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
         disabled={!stripe || loading}
         className="w-full bg-amber-600 hover:bg-amber-700 text-white"
       >
-        {loading ? "Processing…" : "Pay now"}
+        {loading ? t("processing") : t("payNow")}
       </Button>
 
       <p className="text-xs text-stone-400 text-center flex items-center justify-center gap-1">
-        <span>🔒</span> Secured by Stripe — your card details never reach our server
+        <span>🔒</span> {t("secured")}
       </p>
     </form>
   );

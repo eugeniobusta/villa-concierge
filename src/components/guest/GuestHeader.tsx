@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Sun } from "lucide-react";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -10,13 +11,13 @@ interface Props {
   token: string;
 }
 
-export default function GuestHeader({ session, locale, token }: Props) {
+export default async function GuestHeader({ session, locale, token }: Props) {
+  const t = await getTranslations("guest.header");
   const base = `/${locale}/stay/${token}`;
 
   return (
     <header className="border-b border-stone-200 bg-white/90 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4">
-        {/* Top bar */}
         <div className="h-14 flex items-center justify-between">
           <Link href={base} className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center">
@@ -32,13 +33,12 @@ export default function GuestHeader({ session, locale, token }: Props) {
               href={`${base}/bookings`}
               className="text-xs text-stone-500 hover:text-stone-800 font-medium transition-colors"
             >
-              My Bookings
+              {t("myBookings")}
             </Link>
             <LanguageSwitcher />
           </div>
         </div>
 
-        {/* Welcome bar */}
         <div className="py-2 border-t border-stone-100 flex items-center gap-2">
           <p className="text-xs text-stone-500">
             Welcome, <span className="font-medium text-stone-700">{session.guest_name}</span>

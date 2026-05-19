@@ -1,11 +1,4 @@
 {
-  "meta": {
-    "title": "Villa Concierge Malaga",
-    "description": "Private concierge services for your stay in Malaga"
-  },
-  "nav": {
-    "brand": "Villa Concierge"
-  },
   "landing": {
     "badge": "Private Concierge · Malaga",
     "headline": "Everything you need, at your villa.",
@@ -13,16 +6,57 @@
     "notice": "Your host has shared a private link with you. Use that link to access and book services during your stay.",
     "servicesLabel": "Available Services"
   },
-  "services": {
-    "chef": { "label": "Private Chef", "description": "Gourmet meals at your villa" },
-    "cleaning": { "label": "Housekeeping", "description": "Daily cleaning & tidying" },
-    "groceries": { "label": "Grocery Shopping", "description": "Fresh produce delivered" },
-    "yoga": { "label": "Yoga & Fitness", "description": "Personal trainer & yoga" },
-    "massage": { "label": "Massage & Beauty", "description": "Spa services at your door" },
-    "transfer": { "label": "Private Transfer", "description": "Airport & city rides" },
-    "tours": { "label": "Malaga Tours", "description": "Local guides & experiences" },
-    "wine": { "label": "Wine & Beverages", "description": "Curated selection delivered" },
-    "childcare": { "label": "Childcare", "description": "Trusted babysitters" },
-    "laundry": { "label": "Laundry", "description": "Washing, drying & ironing" }
+  "guest": {
+    "access": {
+      "title": "Access unavailable",
+      "message": "This link is only active during your stay dates. If you believe this is an error, please contact your host."
+    },
+    "header": {
+      "myBookings": "My Bookings"
+    },
+    "home": {
+      "title": "Services",
+      "subtitle": "Book any service — we'll confirm and arrange everything.",
+      "all": "All"
+    },
+    "booking": {
+      "back": "Back to Services",
+      "noProviders": "No providers available for this service right now.",
+      "contactHost": "Contact your host to arrange it.",
+      "chooseProvider": "Choose Provider",
+      "chooseDate": "Choose Date",
+      "noAvailability": "No availability during your stay. Contact your host.",
+      "chooseTime": "Choose Time",
+      "duration": "Duration",
+      "notes": "Special requests",
+      "notesPlaceholder": "Dietary requirements, preferences, anything we should know…",
+      "requestBooking": "Request Booking · €{amount}",
+      "paymentNote": "Payment will be collected when your booking is confirmed.",
+      "today": "Today"
+    },
+    "bookings": {
+      "title": "My Bookings",
+      "empty": "No bookings yet.",
+      "browse": "Browse services →",
+      "payToConfirm": "Pay €{amount} to confirm",
+      "back": "Back to Services",
+      "with": "with {name}",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "payment": {
+      "title": "Complete Payment",
+      "back": "Back to Bookings",
+      "payNow": "Pay now",
+      "processing": "Processing…",
+      "secured": "Secured by Stripe — your card details never reach our server",
+      "invalid": "Invalid payment session.",
+      "viewBookings": "View my bookings →"
+    }
   }
 }

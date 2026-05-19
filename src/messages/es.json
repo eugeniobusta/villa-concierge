@@ -1,11 +1,4 @@
 {
-  "meta": {
-    "title": "Villa Concierge Málaga",
-    "description": "Servicios privados de conserjería para tu estancia en Málaga"
-  },
-  "nav": {
-    "brand": "Villa Concierge"
-  },
   "landing": {
     "badge": "Conserjería Privada · Málaga",
     "headline": "Todo lo que necesitas, en tu villa.",
@@ -13,16 +6,57 @@
     "notice": "Tu anfitrión te ha compartido un enlace privado. Úsalo para acceder y reservar servicios durante tu estancia.",
     "servicesLabel": "Servicios Disponibles"
   },
-  "services": {
-    "chef": { "label": "Chef Privado", "description": "Menús gourmet en tu villa" },
-    "cleaning": { "label": "Limpieza", "description": "Limpieza diaria y orden" },
-    "groceries": { "label": "Compra a Domicilio", "description": "Productos frescos entregados" },
-    "yoga": { "label": "Yoga y Fitness", "description": "Entrenador personal y yoga" },
-    "massage": { "label": "Masajes y Belleza", "description": "Spa en tu puerta" },
-    "transfer": { "label": "Traslado Privado", "description": "Aeropuerto y ciudad" },
-    "tours": { "label": "Excursiones Málaga", "description": "Guías locales y experiencias" },
-    "wine": { "label": "Vinos y Bebidas", "description": "Selección curada a domicilio" },
-    "childcare": { "label": "Cuidado de Niños", "description": "Canguros de confianza" },
-    "laundry": { "label": "Lavandería", "description": "Lavado, secado y planchado" }
+  "guest": {
+    "access": {
+      "title": "Acceso no disponible",
+      "message": "Este enlace solo está activo durante las fechas de tu estancia. Si crees que es un error, contacta con tu anfitrión."
+    },
+    "header": {
+      "myBookings": "Mis Reservas"
+    },
+    "home": {
+      "title": "Servicios",
+      "subtitle": "Reserva cualquier servicio — nosotros lo confirmamos y organizamos todo.",
+      "all": "Todos"
+    },
+    "booking": {
+      "back": "Volver a Servicios",
+      "noProviders": "No hay proveedores disponibles para este servicio ahora mismo.",
+      "contactHost": "Contacta con tu anfitrión para organizarlo.",
+      "chooseProvider": "Elige Proveedor",
+      "chooseDate": "Elige Fecha",
+      "noAvailability": "Sin disponibilidad durante tu estancia. Contacta con tu anfitrión.",
+      "chooseTime": "Elige Hora",
+      "duration": "Duración",
+      "notes": "Solicitudes especiales",
+      "notesPlaceholder": "Alergias, preferencias, cualquier cosa que debamos saber…",
+      "requestBooking": "Reservar · €{amount}",
+      "paymentNote": "El pago se realizará cuando confirmes la reserva.",
+      "today": "Hoy"
+    },
+    "bookings": {
+      "title": "Mis Reservas",
+      "empty": "Aún no tienes reservas.",
+      "browse": "Ver servicios →",
+      "payToConfirm": "Pagar €{amount} para confirmar",
+      "back": "Volver a Servicios",
+      "with": "con {name}",
+      "status": {
+        "pending": "Pendiente",
+        "confirmed": "Confirmada",
+        "in_progress": "En curso",
+        "completed": "Completada",
+        "cancelled": "Cancelada"
+      }
+    },
+    "payment": {
+      "title": "Completar Pago",
+      "back": "Volver a Reservas",
+      "payNow": "Pagar ahora",
+      "processing": "Procesando…",
+      "secured": "Protegido por Stripe — tus datos bancarios nunca llegan a nuestro servidor",
+      "invalid": "Sesión de pago inválida.",
+      "viewBookings": "Ver mis reservas →"
+    }
   }
 }
