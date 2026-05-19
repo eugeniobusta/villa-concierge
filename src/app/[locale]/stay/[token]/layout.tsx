@@ -7,6 +7,7 @@ import { getActiveSession } from "@/lib/guest-session";
 import GuestHeader from "@/components/guest/GuestHeader";
 import { SanchamarLogo } from "@/components/SanchamarLogo";
 import { GuestCodeInput } from "@/components/landing/GuestCodeInput";
+import { GuestTour } from "@/components/tour/GuestTour";
 import Link from "next/link";
 import { Lock, ArrowLeft } from "lucide-react";
 
@@ -66,6 +67,8 @@ export default async function GuestLayout({
     <div className="min-h-screen bg-background">
       <GuestHeader session={session} locale={locale} token={token} />
       <main className="max-w-5xl mx-auto px-5 py-10">{children}</main>
+      {/* Spotlight tour — shown once on first visit */}
+      <GuestTour guestName={session.guest_name} />
     </div>
   );
 }

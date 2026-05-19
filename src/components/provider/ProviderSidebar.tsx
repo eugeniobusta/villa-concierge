@@ -9,9 +9,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { SanchamarLogo } from "@/components/SanchamarLogo";
 
 const navItems = [
-  { label: "Dashboard",    href: "/provider/dashboard",    icon: LayoutDashboard },
-  { label: "Availability", href: "/provider/availability", icon: CalendarDays },
-  { label: "Bookings",     href: "/provider/bookings",     icon: ClipboardList },
+  { label: "Dashboard",    href: "/provider/dashboard",    icon: LayoutDashboard, tour: undefined           },
+  { label: "Availability", href: "/provider/availability", icon: CalendarDays,    tour: "availability-nav"  },
+  { label: "Bookings",     href: "/provider/bookings",     icon: ClipboardList,   tour: "bookings-nav"      },
 ];
 
 interface Props {
@@ -36,13 +36,14 @@ export default function ProviderSidebar({ locale, providerName }: Props) {
 
       {/* Nav */}
       <nav className="flex-1 px-1.5 md:px-3 py-4 space-y-0.5">
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {navItems.map(({ label, href, icon: Icon, tour }) => {
           const isActive = pathname.startsWith(href.replace(`/${locale}`, ""));
           return (
             <Link
               key={href}
               href={`/${locale}${href}`}
               title={label}
+              {...(tour ? { "data-tour": tour } : {})}
               className={cn(
                 "flex items-center justify-center md:justify-start gap-2.5 px-2 md:px-3 py-2.5 rounded-xl text-sm transition-all duration-150",
                 isActive

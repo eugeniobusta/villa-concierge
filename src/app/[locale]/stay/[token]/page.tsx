@@ -35,6 +35,7 @@ export default async function GuestHomePage({
     <div>
       {/* My Bookings banner — always visible, highlighted if active bookings exist */}
       <Link
+        data-tour="my-bookings-banner"
         href={`/${locale}/stay/${token}/bookings`}
         className={`flex items-center justify-between rounded-2xl px-5 py-4 mb-8 transition-all group border ${
           bookingCount && bookingCount > 0
@@ -72,12 +73,14 @@ export default async function GuestHomePage({
         <p className="text-muted-foreground text-sm mt-1">{t("subtitle")}</p>
       </div>
 
-      <ServicesGrid
-        categories={categories ?? []}
-        services={services ?? []}
-        locale={locale}
-        token={token}
-      />
+      <div data-tour="services-grid">
+        <ServicesGrid
+          categories={categories ?? []}
+          services={services ?? []}
+          locale={locale}
+          token={token}
+        />
+      </div>
     </div>
   );
 }
