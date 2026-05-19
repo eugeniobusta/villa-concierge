@@ -257,3 +257,35 @@
     100% { transform: translateX(200%); }
   }
 }
+
+/* ── Landing page animations ── */
+/* Each service icon gets a unique motion that fits its meaning */
+@keyframes lp-wiggle  { 0%,100%{ transform:rotate(-12deg) } 50%{ transform:rotate(12deg) } }
+@keyframes lp-spin    { from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
+@keyframes lp-roll    { 0%,100%{ transform:translateX(0) rotate(0deg) } 50%{ transform:translateX(4px) rotate(9deg) } }
+@keyframes lp-lift    { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
+@keyframes lp-bloom   { 0%,100%{ transform:scale(1) rotate(-6deg) } 50%{ transform:scale(1.18) rotate(6deg) } }
+@keyframes lp-drive   { 0%,100%{ transform:translateX(0) rotate(-2deg) } 50%{ transform:translateX(5px) rotate(2deg) } }
+@keyframes lp-compass { from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
+@keyframes lp-sway    { 0%,100%{ transform:rotate(-11deg) translateY(0) } 50%{ transform:rotate(11deg) translateY(-2px) } }
+@keyframes lp-bounce  { 0%,100%{ transform:translateY(0) } 35%{ transform:translateY(-9px) } 55%{ transform:translateY(-3px) } }
+@keyframes lp-wave    { 0%,100%{ transform:translateX(0) scaleX(1) } 50%{ transform:translateX(4px) scaleX(1.06) } }
+@keyframes lp-float   { 0%,100%{ transform:translateY(0) rotate(0deg) } 33%{ transform:translateY(-12px) rotate(4deg) } 66%{ transform:translateY(6px) rotate(-3deg) } }
+
+/* Marquee: two rows scrolling in opposite directions */
+@keyframes lp-marquee     { from{ transform:translateX(0) }    to{ transform:translateX(-50%) } }
+@keyframes lp-marquee-rev { from{ transform:translateX(-50%) } to{ transform:translateX(0) }    }
+
+/* Card entrance stagger */
+@keyframes lp-fade-up { from{ opacity:0; transform:translateY(24px) } to{ opacity:1; transform:translateY(0) } }
+
+/* Hero floating icon bob */
+@keyframes lp-hero-float {
+  0%,100%{ transform:translateY(0) rotate(var(--r, 0deg)) }
+  50%    { transform:translateY(-14px) rotate(var(--r, 0deg)) }
+}
+
+/* Reduced-motion: disable all lp- animations */
+@media (prefers-reduced-motion: reduce) {
+  [class*="lp-"] { animation: none !important; transition: none !important; }
+}
