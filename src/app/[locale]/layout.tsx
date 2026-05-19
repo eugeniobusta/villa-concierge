@@ -6,9 +6,35 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
   title: "Sanchamar · Private Concierge Malaga",
-  description: "Sanchamar — exclusive private concierge services for your villa stay in Malaga.",
+  description:
+    "Exclusive villa services at your fingertips — private chef, massage, transfers, yoga, wine & more. Book in minutes from your phone.",
+  openGraph: {
+    type:        "website",
+    siteName:    "Sanchamar",
+    title:       "Sanchamar · Private Concierge Malaga",
+    description: "Exclusive villa services — private chef, massage, transfers, yoga, wine & more.",
+    url:         APP_URL,
+    images: [{
+      url:    `${APP_URL}/og-image.jpg`,
+      width:  1200,
+      height: 630,
+      alt:    "Sanchamar — Private Villa Concierge Malaga",
+    }],
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "Sanchamar · Private Concierge Malaga",
+    description: "Exclusive villa services — private chef, massage, transfers, yoga, wine & more.",
+    images:      [`${APP_URL}/og-image.jpg`],
+  },
 };
 
 export default async function LocaleLayout({
