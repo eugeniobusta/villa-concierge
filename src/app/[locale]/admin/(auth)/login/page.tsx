@@ -1,12 +1,13 @@
 "use client";
 
-// Login page is a client component: it calls supabase.auth.signInWithPassword()
-// which needs the browser client (can set cookies from the client side).
-// @supabase/ssr automatically mirrors the session into an httpOnly cookie
-// that server components can read.
+// Why "use client" if we're using a Server Action?
+// useActionState is a React 19 hook (client-side) that wires the
+// server action to the form and gives us isPending + error state.
+// The actual auth logic runs entirely on the server — no browser
+// Supabase client, no window.location, no hydration dependency.
 
-import { useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useActionState } from "react";
+import { loginAction } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -14,34 +15,8 @@ import { Sun } from "lucide-react";
 import { useParams } from "next/navigation";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const { locale } = useParams<{ locale: string }>();
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setError(authError.message);
-      setLoading(false);
-      return;
-    }
-
-    // Full page navigation so the server re-reads the new auth cookie.
-    // next-intl's router.push() prepends the locale automatically, which
-    // would double it (/en/en/admin/dashboard). window.location is explicit.
-    window.location.href = `/${locale}/admin/dashboard`;
-  }
+  const [state, formAction, isPending] = useActionState(loginAction, null);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-stone-50">
@@ -57,14 +32,16 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form action={formAction} className="space-y-5">
+            {/* Pass locale to the server action so it can redirect correctly */}
+            <input type="hidden" name="locale" value={locale} />
+
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@yourmail.com"
                 required
                 autoFocus
@@ -75,22 +52,21 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">
-                {error}
+            {state?.error && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-3 py-2.5 rounded-lg">
+                {state.error}
               </p>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in…" : "Sign in"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Signing in…" : "Sign in"}
             </Button>
           </form>
         </div>
