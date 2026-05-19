@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-type LoginState = { error: string } | null;
+type LoginState = { error: string } | { redirect: string } | null;
 
 export async function loginAction(
   _prev: LoginState,
@@ -17,8 +17,6 @@ export async function loginAction(
     return { error: "Email and password are required." };
   }
 
-  // createClient() from server.ts uses @supabase/ssr which sets httpOnly
-  // cookies automatically — no client-side JS needed at all.
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -26,8 +24,9 @@ export async function loginAction(
     return { error: error.message };
   }
 
-  // Auth succeeded — the protected layout checks ADMIN_EMAIL on every request.
-  redirect(`/${locale}/admin/dashboard`);
+  // Return redirect URL — client navigates via window.location.href to ensure
+  // the session cookie from signInWithPassword is present in the next request.
+  return { redirect: `/${locale}/admin/dashboard` };
 }
 
 export async function logoutAction(formData: FormData) {
@@ -38,10 +37,17 @@ export async function logoutAction(formData: FormData) {
   redirect(redirectTo);
 }
 
+// NOTE: providerLoginAction returns { redirect: url } instead of calling redirect()
+// because on Vercel production the Set-Cookie headers from signInWithPassword don't
+// flush reliably before a server-side redirect() throws. Returning the URL and
+// letting the client navigate via window.location.href forces a full page reload
+// which guarantees the session cookie is present in the next request.
+type ProviderLoginState = { error: string } | { redirect: string } | null;
+
 export async function providerLoginAction(
-  _prev: LoginState,
+  _prev: ProviderLoginState,
   formData: FormData
-): Promise<LoginState> {
+): Promise<ProviderLoginState> {
   const email    = (formData.get("email") as string)?.trim();
   const password = formData.get("password") as string;
   const locale   = (formData.get("locale") as string) || "en";
@@ -53,5 +59,5 @@ export async function providerLoginAction(
 
   if (error) return { error: error.message };
 
-  redirect(`/${locale}/provider/dashboard`);
+  return { redirect: `/${locale}/provider/dashboard` };
 }
