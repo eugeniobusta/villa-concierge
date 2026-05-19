@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "title": "Villa Concierge Málaga",
+    "description": "Servicios privados de conserjería para tu estancia en Málaga"
+  },
+  "nav": {
+    "brand": "Villa Concierge"
+  },
+  "landing": {
+    "badge": "Conserjería Privada · Málaga",
+    "headline": "Todo lo que necesitas, en tu villa.",
+    "subtext": "Reserva cocineros privados, masajes, la compra y más — servicios exclusivos para los huéspedes de tu villa en Málaga.",
+    "notice": "Tu anfitrión te ha compartido un enlace privado. Úsalo para acceder y reservar servicios durante tu estancia.",
+    "servicesLabel": "Servicios Disponibles"
+  },
+  "services": {
+    "chef": { "label": "Chef Privado", "description": "Menús gourmet en tu villa" },
+    "cleaning": { "label": "Limpieza", "description": "Limpieza diaria y orden" },
+    "groceries": { "label": "Compra a Domicilio", "description": "Productos frescos entregados" },
+    "yoga": { "label": "Yoga y Fitness", "description": "Entrenador personal y yoga" },
+    "massage": { "label": "Masajes y Belleza", "description": "Spa en tu puerta" },
+    "transfer": { "label": "Traslado Privado", "description": "Aeropuerto y ciudad" },
+    "tours": { "label": "Excursiones Málaga", "description": "Guías locales y experiencias" },
+    "wine": { "label": "Vinos y Bebidas", "description": "Selección curada a domicilio" },
+    "childcare": { "label": "Cuidado de Niños", "description": "Canguros de confianza" },
+    "laundry": { "label": "Lavandería", "description": "Lavado, secado y planchado" }
+  }
+}

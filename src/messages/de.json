@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "title": "Villa Concierge Malaga",
+    "description": "Private Concierge-Dienste für Ihren Aufenthalt in Malaga"
+  },
+  "nav": {
+    "brand": "Villa Concierge"
+  },
+  "landing": {
+    "badge": "Privater Concierge · Malaga",
+    "headline": "Alles, was Sie brauchen, in Ihrer Villa.",
+    "subtext": "Buchen Sie private Köche, Massagen, Einkäufe und mehr — exklusive Services für die Gäste Ihrer Villa in Malaga.",
+    "notice": "Ihr Gastgeber hat Ihnen einen privaten Link geteilt. Nutzen Sie ihn, um Services während Ihres Aufenthalts zu buchen.",
+    "servicesLabel": "Verfügbare Services"
+  },
+  "services": {
+    "chef": { "label": "Privatkoch", "description": "Gourmet-Mahlzeiten in der Villa" },
+    "cleaning": { "label": "Hauswirtschaft", "description": "Tägliche Reinigung & Aufräumen" },
+    "groceries": { "label": "Einkaufsservice", "description": "Frische Produkte geliefert" },
+    "yoga": { "label": "Yoga & Fitness", "description": "Personal Trainer & Yoga" },
+    "massage": { "label": "Massage & Beauty", "description": "Spa-Services vor Ort" },
+    "transfer": { "label": "Privattransfer", "description": "Flughafen & Stadtfahrten" },
+    "tours": { "label": "Malaga Touren", "description": "Lokale Guides & Erlebnisse" },
+    "wine": { "label": "Wein & Getränke", "description": "Kuratierte Auswahl geliefert" },
+    "childcare": { "label": "Kinderbetreuung", "description": "Vertrauenswürdige Babysitter" },
+    "laundry": { "label": "Wäscheservice", "description": "Waschen, Trocknen & Bügeln" }
+  }
+}

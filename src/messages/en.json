@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "title": "Villa Concierge Malaga",
+    "description": "Private concierge services for your stay in Malaga"
+  },
+  "nav": {
+    "brand": "Villa Concierge"
+  },
+  "landing": {
+    "badge": "Private Concierge · Malaga",
+    "headline": "Everything you need, at your villa.",
+    "subtext": "Book private chefs, massages, grocery runs, and more — curated services available exclusively for guests of your Malaga villa.",
+    "notice": "Your host has shared a private link with you. Use that link to access and book services during your stay.",
+    "servicesLabel": "Available Services"
+  },
+  "services": {
+    "chef": { "label": "Private Chef", "description": "Gourmet meals at your villa" },
+    "cleaning": { "label": "Housekeeping", "description": "Daily cleaning & tidying" },
+    "groceries": { "label": "Grocery Shopping", "description": "Fresh produce delivered" },
+    "yoga": { "label": "Yoga & Fitness", "description": "Personal trainer & yoga" },
+    "massage": { "label": "Massage & Beauty", "description": "Spa services at your door" },
+    "transfer": { "label": "Private Transfer", "description": "Airport & city rides" },
+    "tours": { "label": "Malaga Tours", "description": "Local guides & experiences" },
+    "wine": { "label": "Wine & Beverages", "description": "Curated selection delivered" },
+    "childcare": { "label": "Childcare", "description": "Trusted babysitters" },
+    "laundry": { "label": "Laundry", "description": "Washing, drying & ironing" }
+  }
+}
