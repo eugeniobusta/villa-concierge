@@ -92,7 +92,7 @@ export default async function PaymentPage({
         bookingId={bookingId}
         locale={locale}
         token={token}
-        returnUrl={`${process.env.NEXT_PUBLIC_APP_URL}/${locale}/stay/${token}/bookings`}
+        returnUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/${locale}/stay/${token}/bookings`}
       />
     </div>
   );

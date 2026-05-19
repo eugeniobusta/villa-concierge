@@ -36,7 +36,11 @@ export default async function StayDetailPage({
 
   if (!stay) notFound();
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  // NEXT_PUBLIC_APP_URL must be set in Vercel env vars after first deployment.
+  // VERCEL_URL is a Vercel system var (no https://) used as a fallback.
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
   const guestLink = `${appUrl}/${locale}/stay/${stay.access_token}`;
   const status = stayStatus(stay.check_in, stay.check_out);
 
