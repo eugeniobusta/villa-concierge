@@ -169,8 +169,21 @@ export interface Database {
       };
       bookings: {
         Row: BookingRow;
-        Insert: Omit<BookingRow, "id" | "created_at" | "updated_at"> & {
+        Insert: {
           id?: string;
+          guest_session_id: string;
+          provider_service_id: string;
+          booking_date: string;
+          start_time?: string | null;
+          end_time?: string | null;
+          quantity?: number;                    // DEFAULT 1
+          special_requests?: string | null;
+          status?: BookingStatus;               // DEFAULT 'pending'
+          total_amount: number;
+          provider_amount: number;
+          platform_amount: number;
+          stripe_payment_intent_id?: string | null;
+          stripe_payment_status?: PaymentStatus; // DEFAULT 'pending'
           created_at?: string;
           updated_at?: string;
         };
