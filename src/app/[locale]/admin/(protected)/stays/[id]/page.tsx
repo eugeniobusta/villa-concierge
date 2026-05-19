@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { BookingStatus } from "@/types/database";
+import { getAppUrl } from "@/lib/app-url";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
   pending:     "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300",
@@ -69,10 +70,7 @@ export default async function StayDetailPage({
   const psToSvc = Object.fromEntries((psRows ?? []).map((p) => [p.id, p.service_id]));
   const svcNames = Object.fromEntries((svcRows ?? []).map((s) => [s.id, (s.name as Record<string, string>).en]));
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const guestLink = `${appUrl}/${locale}/stay/${stay.access_token}`;
+  const guestLink = `${getAppUrl()}/${locale}/stay/${stay.access_token}`;
   const status = stayStatus(stay.check_in, stay.check_out);
   const deleteWithLocale = deleteStayAction.bind(null, stay.id, locale);
 

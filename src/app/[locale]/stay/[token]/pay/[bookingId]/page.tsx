@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { getActiveSession, formatDate } from "@/lib/guest-session";
+import { getAppUrl } from "@/lib/app-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import StripePaymentForm from "@/components/guest/StripePaymentForm";
@@ -96,7 +97,7 @@ export default async function PaymentPage({
         bookingId={bookingId}
         locale={locale}
         token={token}
-        returnUrl={`${process.env.NEXT_PUBLIC_APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/${locale}/stay/${token}/bookings`}
+        returnUrl={`${getAppUrl()}/${locale}/stay/${token}/bookings`}
       />
     </div>
   );
