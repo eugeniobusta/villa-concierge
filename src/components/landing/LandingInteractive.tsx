@@ -145,8 +145,8 @@ export default function LandingInteractive({ services }: Props) {
     <>
       {/* ── Marquee band ── */}
       <section className="py-2 border-y border-border bg-muted/30 overflow-hidden">
-        <MarqueeRow services={services} reverse={false} speed={28} />
-        <MarqueeRow services={services} reverse={true}  speed={22} />
+        <MarqueeRow services={services} reverse={false} speed={55} />
+        <MarqueeRow services={services} reverse={true}  speed={42} />
       </section>
 
       {/* ── Services grid ── */}
@@ -205,55 +205,6 @@ export default function LandingInteractive({ services }: Props) {
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="max-w-6xl mx-auto px-5 pb-24">
-        <div className="text-center mb-14">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.18em] mb-3">
-            How it works
-          </p>
-          <h2 className="text-3xl md:text-4xl font-semibold text-foreground tracking-tight">
-            Simple for everyone
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {/* Connecting line (desktop only) */}
-          <div className="hidden md:block absolute top-8 left-[calc(16.67%+1rem)] right-[calc(16.67%+1rem)] h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-          {[
-            {
-              step: "01",
-              icon: "🔑",
-              title: "Host sets up the stay",
-              desc: "Enter guest name and dates. A unique, time-limited access link is generated instantly.",
-            },
-            {
-              step: "02",
-              icon: "📱",
-              title: "Guest opens their link",
-              desc: "No app, no account. Guests see every available service and can book directly from their phone.",
-            },
-            {
-              step: "03",
-              icon: "✅",
-              title: "Book, pay & relax",
-              desc: "Secure Stripe checkout in seconds. Everything is arranged — the guest just shows up.",
-            },
-          ].map(({ step, icon, title, desc }) => (
-            <div key={step} className="relative text-center md:text-left">
-              {/* Step number bubble */}
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/8 border border-primary/20 mb-5 relative">
-                <span className="text-2xl">{icon}</span>
-                <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                  {step}
-                </span>
-              </div>
-              <h3 className="text-base font-semibold text-foreground mb-2">{title}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
     </>
   );
 }

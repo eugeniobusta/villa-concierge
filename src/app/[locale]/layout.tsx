@@ -7,8 +7,8 @@ import { getMessages } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 
 export const metadata: Metadata = {
-  title: "Villa Concierge Malaga",
-  description: "Private concierge services for your stay in Malaga",
+  title: "Sanchamar · Private Concierge Malaga",
+  description: "Sanchamar — exclusive private concierge services for your villa stay in Malaga.",
 };
 
 export default async function LocaleLayout({

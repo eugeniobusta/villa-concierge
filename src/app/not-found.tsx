@@ -198,7 +198,7 @@ export default function NotFoundPage() {
 
           {/* Footer hint */}
           <p className="mt-10 text-xs text-muted-foreground/40 tracking-wider uppercase">
-            Error 404 &nbsp;·&nbsp; Villa Concierge Malaga
+            Error 404 &nbsp;·&nbsp; Sanchamar · Malaga
           </p>
         </div>
       </div>

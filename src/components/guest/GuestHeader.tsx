@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
-import { Sun } from "lucide-react";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SanchamarLogo } from "@/components/SanchamarLogo";
 import type { GuestSession } from "@/types/database";
 import { formatDate } from "@/lib/guest-session";
 
@@ -22,12 +22,7 @@ export default async function GuestHeader({ session, locale, token }: Props) {
         {/* Main nav */}
         <div className="h-14 flex items-center justify-between">
           <Link href={base} className="flex items-center gap-2.5 group">
-            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center transition-colors group-hover:bg-primary/20">
-              <Sun className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <span className="font-semibold text-foreground text-sm tracking-tight">
-              Villa Concierge
-            </span>
+            <SanchamarLogo variant="full" height={24} />
           </Link>
 
           <div className="flex items-center gap-1">

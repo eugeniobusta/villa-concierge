@@ -5,7 +5,7 @@ import { providerLoginAction } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { CalendarDays } from "lucide-react";
+import { SanchamarLogo } from "@/components/SanchamarLogo";
 import { useParams } from "next/navigation";
 
 export default function ProviderLoginPage() {
@@ -28,11 +28,10 @@ export default function ProviderLoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <CalendarDays className="h-6 w-6 text-primary" />
+          <div className="flex justify-center mb-4">
+            <SanchamarLogo variant="full" height={40} />
           </div>
-          <h1 className="text-xl font-semibold text-foreground">Villa Concierge</h1>
-          <p className="text-sm text-muted-foreground mt-1">Provider Portal</p>
+          <p className="text-sm text-muted-foreground mt-2">Provider Portal</p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-8 shadow-warm-sm">

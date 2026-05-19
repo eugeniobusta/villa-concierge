@@ -6,6 +6,7 @@ import { CalendarDays, LayoutDashboard, ClipboardList, LogOut } from "lucide-rea
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SanchamarLogo } from "@/components/SanchamarLogo";
 
 const navItems = [
   { label: "Dashboard",    href: "/provider/dashboard",    icon: LayoutDashboard },
@@ -24,9 +25,12 @@ export default function ProviderSidebar({ locale, providerName }: Props) {
   return (
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-sidebar h-screen sticky top-0">
       {/* Brand */}
-      <div className="px-5 py-5 border-b border-border/70">
-        <p className="text-xs font-semibold text-foreground leading-tight tracking-tight">Villa Concierge</p>
-        <p className="text-[10px] text-muted-foreground mt-0.5">Provider Portal</p>
+      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border/70">
+        <SanchamarLogo variant="mark" height={28} />
+        <div>
+          <p className="text-xs font-semibold text-foreground leading-tight tracking-tight">Sanchamar</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Provider Portal</p>
+        </div>
       </div>
 
       {/* Nav */}

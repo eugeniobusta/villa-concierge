@@ -2,10 +2,11 @@
 
 import { usePathname } from "@/lib/navigation";
 import { logoutAction } from "@/actions/auth";
-import { Sun, LayoutDashboard, CalendarDays, Users, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, ClipboardList, LogOut } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SanchamarLogo } from "@/components/SanchamarLogo";
 
 const navItems = [
   { label: "Dashboard",   href: "/admin/dashboard", icon: LayoutDashboard },
@@ -26,11 +27,9 @@ export default function AdminSidebar({ locale, userEmail }: Props) {
     <aside className="w-56 flex-shrink-0 flex flex-col border-r border-border bg-sidebar h-screen sticky top-0">
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border/70">
-        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-          <Sun className="h-3.5 w-3.5 text-primary" />
-        </div>
+        <SanchamarLogo variant="mark" height={28} />
         <div>
-          <p className="text-xs font-semibold text-foreground leading-tight tracking-tight">Villa Concierge</p>
+          <p className="text-xs font-semibold text-foreground leading-tight tracking-tight">Sanchamar</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">Admin Portal</p>
         </div>
       </div>

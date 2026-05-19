@@ -129,7 +129,7 @@ export default async function DashboardPage({
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Villa Concierge overview</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Sanchamar overview</p>
         </div>
         <Link href={`/${locale}/admin/stays/new`}>
           <Button size="sm" className="gap-1.5">
