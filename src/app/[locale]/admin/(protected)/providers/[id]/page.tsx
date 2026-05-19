@@ -3,11 +3,10 @@
 import { useActionState, useEffect, useState } from "react";
 import { updateProviderAction } from "@/actions/providers";
 import { linkProviderAccountAction } from "@/actions/availability";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -23,8 +22,6 @@ export default function EditProviderPage() {
 
   useEffect(() => {
     const anon = createClient();
-
-    // Fetch provider (public read) and all services
     Promise.all([
       anon.from("providers").select("*").eq("id", id).single(),
       anon.from("services").select("*").eq("is_active", true).order("sort_order"),
@@ -39,7 +36,7 @@ export default function EditProviderPage() {
   if (!provider) {
     return (
       <div className="p-8 flex items-center justify-center min-h-[50vh]">
-        <p className="text-stone-400 text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">Loading…</p>
       </div>
     );
   }
@@ -47,18 +44,21 @@ export default function EditProviderPage() {
   const bioEn = (provider.bio as Record<string, string> | null)?.en ?? "";
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 max-w-2xl space-y-4">
       <Link
         href={`/${locale}/admin/providers`}
-        className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-2 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Providers
       </Link>
 
-      <h1 className="text-2xl font-semibold text-stone-900 mb-1">Edit Provider</h1>
-      <p className="text-sm text-stone-400 mb-8">{provider.name}</p>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground mb-0.5">Edit Provider</h1>
+        <p className="text-sm text-muted-foreground">{provider.name}</p>
+      </div>
 
-      <div className="bg-white rounded-2xl border border-stone-200 p-8">
+      {/* Provider details form */}
+      <div className="bg-card rounded-2xl border border-border p-8 shadow-warm-sm">
         <form action={formAction} className="space-y-5">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="id" value={provider.id} />
@@ -99,7 +99,6 @@ export default function EditProviderPage() {
             </div>
           </div>
 
-          {/* Services */}
           {services.length > 0 && (
             <div className="space-y-2">
               <Label>Services Offered</Label>
@@ -107,16 +106,16 @@ export default function EditProviderPage() {
                 {services.map((svc) => (
                   <label
                     key={svc.id}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-stone-200 hover:bg-stone-50 cursor-pointer text-sm"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border hover:bg-secondary cursor-pointer text-sm transition-colors"
                   >
                     <input
                       type="checkbox"
                       name="service_ids"
                       value={svc.id}
                       defaultChecked={selectedIds.has(svc.id)}
-                      className="accent-amber-600"
+                      className="accent-primary"
                     />
-                    <span className="text-stone-700">
+                    <span className="text-foreground">
                       {(svc.name as Record<string, string>).en}
                     </span>
                   </label>
@@ -126,7 +125,7 @@ export default function EditProviderPage() {
           )}
 
           {state?.error && (
-            <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">
+            <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2.5 rounded-lg">
               {state.error}
             </p>
           )}
@@ -142,14 +141,22 @@ export default function EditProviderPage() {
         </form>
       </div>
 
-      {/* Link Provider Portal Access */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-8">
-        <p className="text-sm font-medium text-stone-700 mb-1">Provider Portal Access</p>
-        <p className="text-xs text-stone-400 mb-4">
-          {provider.user_id
-            ? "✓ Linked — this provider can log in to the provider portal."
-            : "Not linked yet. Enter their email to give portal access."}
-        </p>
+      {/* Portal access link */}
+      <div className="bg-card rounded-2xl border border-border p-6 shadow-warm-sm">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground mb-0.5">Provider Portal Access</p>
+            <p className="text-xs text-muted-foreground">
+              {provider.user_id
+                ? "This provider can log in to the provider portal."
+                : "Not linked yet. Enter their email to give portal access."}
+            </p>
+          </div>
+          {provider.user_id && (
+            <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+          )}
+        </div>
+
         <form action={linkFormAction} className="flex gap-2">
           <input type="hidden" name="provider_id" value={provider.id} />
           <Input
@@ -163,13 +170,17 @@ export default function EditProviderPage() {
             {linkPending ? "Linking…" : provider.user_id ? "Re-link" : "Link account"}
           </Button>
         </form>
+
         {"error" in (linkState ?? {}) && (
-          <p className="text-xs text-red-500 mt-2">{(linkState as { error: string }).error}</p>
+          <p className="text-xs text-destructive mt-2">{(linkState as { error: string }).error}</p>
         )}
         {"success" in (linkState ?? {}) && (
-          <p className="text-xs text-emerald-600 mt-2">{(linkState as { success: string }).success}</p>
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+            {(linkState as { success: string }).success}
+          </p>
         )}
-        <p className="text-xs text-stone-300 mt-2">
+
+        <p className="text-xs text-muted-foreground/50 mt-3">
           The provider must have a Supabase account first — create one in Supabase Dashboard → Authentication → Users.
         </p>
       </div>

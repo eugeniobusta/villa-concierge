@@ -1,4 +1,5 @@
-import { getActiveSession } from "@/lib/guest-session";
+import { getTranslations } from "next-intl/server";
+import { getActiveSession, formatDate } from "@/lib/guest-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import StripePaymentForm from "@/components/guest/StripePaymentForm";
@@ -14,17 +15,20 @@ export default async function PaymentPage({
 }) {
   const { locale, token, bookingId } = await params;
   const { client_secret } = await searchParams;
+  const t = await getTranslations("guest.payment");
 
   const session = await getActiveSession(token);
   if (!session) notFound();
 
   if (!client_secret) {
-    // No client_secret means the user navigated here directly — redirect back
     return (
       <div className="max-w-lg mx-auto text-center py-20">
-        <p className="text-stone-400">Invalid payment session.</p>
-        <Link href={`/${locale}/stay/${token}/bookings`} className="text-amber-600 text-sm hover:underline mt-2 block">
-          View my bookings →
+        <p className="text-muted-foreground mb-3">{t("invalid")}</p>
+        <Link
+          href={`/${locale}/stay/${token}/bookings`}
+          className="text-primary text-sm hover:underline"
+        >
+          {t("viewBookings")}
         </Link>
       </div>
     );
@@ -39,7 +43,6 @@ export default async function PaymentPage({
 
   if (!booking) notFound();
 
-  // Fetch service name for the summary
   const { data: ps } = await db
     .from("provider_services")
     .select("service_id, provider_id")
@@ -51,42 +54,43 @@ export default async function PaymentPage({
     ps ? db.from("providers").select("name").eq("id", ps.provider_id).single() : { data: null },
   ]);
 
-  const serviceName = service ? (service.name as Record<string, string>).en : "Service";
+  const serviceName = service
+    ? ((service.name as Record<string, string>)[locale] ?? (service.name as Record<string, string>).en)
+    : "Service";
   const providerName = provider?.name ?? "";
 
   return (
     <div className="max-w-lg mx-auto">
       <Link
         href={`/${locale}/stay/${token}/bookings`}
-        className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to Bookings
+        <ArrowLeft className="h-4 w-4" /> {t("back")}
       </Link>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-stone-900 mb-1">Complete Payment</h1>
-        <p className="text-stone-400 text-sm">
+        <h1 className="text-2xl font-semibold text-foreground mb-1">{t("title")}</h1>
+        <p className="text-muted-foreground text-sm">
           {serviceName}{providerName && ` · ${providerName}`}
         </p>
       </div>
 
       {/* Order summary */}
-      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 mb-6">
+      <div className="bg-primary/5 border border-primary/15 rounded-2xl p-5 mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm font-medium text-stone-800">{serviceName}</p>
-            <p className="text-xs text-stone-500 mt-0.5">
-              {booking.booking_date}
+            <p className="text-sm font-medium text-foreground">{serviceName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {formatDate(booking.booking_date, { locale })}
               {booking.start_time && ` · ${booking.start_time.slice(0, 5)}`}
             </p>
           </div>
-          <p className="text-xl font-semibold text-stone-900">
+          <p className="text-xl font-semibold text-foreground">
             €{booking.total_amount.toFixed(2)}
           </p>
         </div>
       </div>
 
-      {/* Stripe card form — rendered client-side */}
       <StripePaymentForm
         clientSecret={client_secret}
         bookingId={bookingId}

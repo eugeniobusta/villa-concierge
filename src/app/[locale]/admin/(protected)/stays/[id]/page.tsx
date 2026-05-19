@@ -3,20 +3,34 @@ import { notFound } from "next/navigation";
 import { deleteStayAction } from "@/actions/stays";
 import CopyButton from "@/components/admin/CopyButton";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import type { BookingStatus } from "@/types/database";
+
+const STATUS_STYLES: Record<BookingStatus, string> = {
+  pending:     "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300",
+  confirmed:   "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+  completed:   "bg-muted text-muted-foreground",
+  cancelled:   "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
+};
 
 function stayStatus(checkIn: string, checkOut: string) {
   const today = new Date().toISOString().split("T")[0];
-  if (today < checkIn) return { label: "Upcoming", cls: "bg-blue-50 text-blue-700 border-blue-100" };
-  if (today > checkOut) return { label: "Expired",  cls: "bg-stone-100 text-stone-500 border-stone-200" };
-  return { label: "Active", cls: "bg-emerald-50 text-emerald-700 border-emerald-100" };
+  if (today < checkIn) return { label: "Upcoming", cls: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200 dark:border-blue-900" };
+  if (today > checkOut) return { label: "Expired",  cls: "bg-muted text-muted-foreground border-border" };
+  return { label: "Active", cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900" };
 }
 
 function fmt(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-GB", {
     weekday: "short", day: "numeric", month: "long", year: "numeric",
+  });
+}
+
+function fmtShort(d: string) {
+  return new Date(d + "T00:00:00").toLocaleDateString("en-GB", {
+    day: "numeric", month: "short",
   });
 }
 
@@ -36,21 +50,41 @@ export default async function StayDetailPage({
 
   if (!stay) notFound();
 
-  // NEXT_PUBLIC_APP_URL must be set in Vercel env vars after first deployment.
-  // VERCEL_URL is a Vercel system var (no https://) used as a fallback.
+  // Fetch bookings for this stay
+  const { data: bookings } = await db
+    .from("bookings")
+    .select("*")
+    .eq("guest_session_id", id)
+    .order("booking_date", { ascending: true });
+
+  // Resolve service names via flat queries
+  const psIds = [...new Set((bookings ?? []).map((b) => b.provider_service_id))];
+  const { data: psRows } = psIds.length
+    ? await db.from("provider_services").select("id, service_id").in("id", psIds)
+    : { data: [] };
+  const svcIds = [...new Set((psRows ?? []).map((p) => p.service_id))];
+  const { data: svcRows } = svcIds.length
+    ? await db.from("services").select("id, name").in("id", svcIds)
+    : { data: [] };
+  const psToSvc = Object.fromEntries((psRows ?? []).map((p) => [p.id, p.service_id]));
+  const svcNames = Object.fromEntries((svcRows ?? []).map((s) => [s.id, (s.name as Record<string, string>).en]));
+
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
   const guestLink = `${appUrl}/${locale}/stay/${stay.access_token}`;
   const status = stayStatus(stay.check_in, stay.check_out);
-
   const deleteWithLocale = deleteStayAction.bind(null, stay.id, locale);
+
+  const totalRevenue = (bookings ?? [])
+    .filter((b) => b.status !== "cancelled")
+    .reduce((s, b) => s + b.total_amount, 0);
 
   return (
     <div className="p-8 max-w-2xl">
       <Link
         href={`/${locale}/admin/stays`}
-        className="flex items-center gap-1.5 text-sm text-stone-400 hover:text-stone-700 mb-6 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Stays
       </Link>
@@ -58,8 +92,8 @@ export default async function StayDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-stone-900">{stay.guest_name}</h1>
-          <p className="text-stone-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-semibold text-foreground">{stay.guest_name}</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             {fmt(stay.check_in)} – {fmt(stay.check_out)}
           </p>
         </div>
@@ -68,13 +102,13 @@ export default async function StayDetailPage({
         </span>
       </div>
 
-      {/* Access Link — the most important part of this page */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-6 mb-4">
-        <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
+      {/* Access Link */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-4 shadow-warm-sm">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
           Guest Access Link
         </p>
-        <div className="flex items-center gap-2 bg-stone-50 rounded-xl px-4 py-3 mb-3">
-          <code className="text-sm text-stone-700 flex-1 break-all">{guestLink}</code>
+        <div className="flex items-center gap-2 bg-muted/50 rounded-xl px-4 py-3 mb-3">
+          <code className="text-sm text-foreground flex-1 break-all">{guestLink}</code>
         </div>
         <div className="flex gap-2">
           <CopyButton text={guestLink} label="Copy link" />
@@ -84,45 +118,81 @@ export default async function StayDetailPage({
             </Button>
           </a>
         </div>
-        <p className="text-xs text-stone-400 mt-3">
-          Share this link with your guest via WhatsApp, email, or embed it in a QR code.
-          It only works between {fmt(stay.check_in)} and {fmt(stay.check_out)}.
+        <p className="text-xs text-muted-foreground mt-3">
+          Share this with your guest via WhatsApp or email. Active between{" "}
+          {fmtShort(stay.check_in)} and {fmtShort(stay.check_out)}.
         </p>
       </div>
 
       {/* Guest details */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-6 mb-4">
-        <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-4">Details</p>
+      <div className="bg-card rounded-2xl border border-border p-6 mb-4 shadow-warm-sm">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-4">Details</p>
         <dl className="space-y-3 text-sm">
           {stay.guest_email && (
             <div className="flex justify-between">
-              <dt className="text-stone-400">Email</dt>
-              <dd className="text-stone-700">{stay.guest_email}</dd>
+              <dt className="text-muted-foreground">Email</dt>
+              <dd className="text-foreground">{stay.guest_email}</dd>
             </div>
           )}
           <div className="flex justify-between">
-            <dt className="text-stone-400">Access token</dt>
-            <dd><code className="text-xs bg-stone-100 px-2 py-0.5 rounded font-mono">{stay.access_token}</code></dd>
+            <dt className="text-muted-foreground">Access token</dt>
+            <dd>
+              <code className="text-xs bg-muted px-2 py-0.5 rounded font-mono text-muted-foreground">
+                {stay.access_token}
+              </code>
+            </dd>
           </div>
           {stay.notes && (
             <div>
-              <dt className="text-stone-400 mb-1">Notes</dt>
-              <dd className="text-stone-700 bg-stone-50 rounded-lg px-3 py-2">{stay.notes}</dd>
+              <dt className="text-muted-foreground mb-1">Notes</dt>
+              <dd className="text-foreground bg-muted/50 rounded-lg px-3 py-2">{stay.notes}</dd>
             </div>
           )}
         </dl>
       </div>
 
-      {/* Bookings — Phase 5 */}
-      <div className="bg-white rounded-2xl border border-stone-200 p-6 mb-6">
-        <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">Bookings</p>
-        <p className="text-sm text-stone-400">Booking management arrives in Phase 5.</p>
+      {/* Bookings */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-4 shadow-warm-sm">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Bookings</p>
+          {(bookings?.length ?? 0) > 0 && (
+            <p className="text-xs text-muted-foreground">
+              €{totalRevenue.toFixed(2)} total
+            </p>
+          )}
+        </div>
+        {!bookings?.length ? (
+          <p className="text-sm text-muted-foreground">No bookings yet for this stay.</p>
+        ) : (
+          <div className="space-y-2">
+            {bookings.map((b) => {
+              const svcName = svcNames[psToSvc[b.provider_service_id]] ?? "Service";
+              return (
+                <div key={b.id} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{svcName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {fmtShort(b.booking_date)}
+                      {b.start_time && ` · ${b.start_time.slice(0, 5)}`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_STYLES[b.status as BookingStatus]}`}>
+                      {b.status.replace("_", " ")}
+                    </span>
+                    <p className="text-xs text-muted-foreground mt-1">€{b.total_amount.toFixed(2)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Danger zone */}
-      <div className="border border-red-100 rounded-2xl p-5">
-        <p className="text-sm font-medium text-red-700 mb-1">Delete Stay</p>
-        <p className="text-xs text-red-400 mb-3">
+      <div className="border border-destructive/30 rounded-2xl p-5">
+        <p className="text-sm font-medium text-destructive mb-1">Delete Stay</p>
+        <p className="text-xs text-muted-foreground mb-3">
           This permanently removes the stay and revokes the guest&apos;s access link.
         </p>
         <form action={deleteWithLocale}>

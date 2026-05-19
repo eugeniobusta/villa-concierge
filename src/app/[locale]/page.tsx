@@ -63,18 +63,20 @@ export default async function LandingPage() {
               </span>
             </div>
 
-            {/* Headline */}
+            {/* Headline — split on the LAST comma so all locales work correctly */}
             <h1 className="text-5xl md:text-7xl font-semibold text-foreground tracking-tight leading-[1.08] mb-6">
-              {t("headline").split(",").map((part, i) => (
-                <span key={i}>
-                  {i === 0 ? part : (
-                    <>
-                      ,<br />
-                      <span className="text-gradient">{part}</span>
-                    </>
-                  )}
-                </span>
-              ))}
+              {(() => {
+                const headline = t("headline");
+                const idx = headline.lastIndexOf(",");
+                if (idx === -1) return <span>{headline}</span>;
+                return (
+                  <>
+                    <span>{headline.slice(0, idx)},</span>
+                    <br />
+                    <span className="text-gradient">{headline.slice(idx + 1)}</span>
+                  </>
+                );
+              })()}
             </h1>
 
             {/* Subtext */}

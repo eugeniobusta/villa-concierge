@@ -1,9 +1,5 @@
 "use client";
 
-// Stripe's card form must live in the browser — it renders an iframe
-// that communicates directly with Stripe servers. Card details NEVER
-// touch your server. That's how PCI compliance works.
-
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { loadStripe } from "@stripe/stripe-js";
@@ -14,13 +10,9 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
-// NEXT_PUBLIC_ vars are the only env vars safe to use in client components.
-// Never import from @/lib/stripe here — that file uses STRIPE_SECRET_KEY
-// which is undefined in the browser and would crash on import.
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface Props {
   clientSecret: string;
@@ -30,7 +22,6 @@ interface Props {
   returnUrl: string;
 }
 
-// Inner component — must be inside <Elements> to use useStripe/useElements
 function CheckoutForm({ returnUrl }: { returnUrl: string }) {
   const stripe   = useStripe();
   const elements = useElements();
@@ -41,20 +32,14 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!stripe || !elements) return;
-
     setLoading(true);
     setError(null);
 
-    // confirmPayment sends the card details directly to Stripe (not your server).
-    // On success, Stripe redirects to returnUrl with ?payment_intent=... appended.
-    // On failure, it returns an error object — we show it inline.
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: returnUrl },
     });
 
-    // confirmPayment only returns here if there's an error.
-    // On success the browser navigates to returnUrl automatically.
     if (stripeError) {
       setError(stripeError.message ?? "Payment failed. Please try again.");
       setLoading(false);
@@ -63,14 +48,12 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* PaymentElement renders Stripe's hosted card input — supports cards,
-          Apple Pay, Google Pay automatically depending on the browser */}
-      <div className="bg-white border border-stone-200 rounded-2xl p-5">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-warm-sm">
         <PaymentElement />
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-3 py-2.5 rounded-lg">
+        <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2.5 rounded-lg">
           {error}
         </p>
       )}
@@ -78,19 +61,25 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
       <Button
         type="submit"
         disabled={!stripe || loading}
-        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
       >
-        {loading ? t("processing") : t("payNow")}
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t("processing")}
+          </span>
+        ) : (
+          t("payNow")
+        )}
       </Button>
 
-      <p className="text-xs text-stone-400 text-center flex items-center justify-center gap-1">
+      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
         <span>🔒</span> {t("secured")}
       </p>
     </form>
   );
 }
 
-// Outer component — provides the Stripe context with the client_secret
 export default function StripePaymentForm({ clientSecret, returnUrl }: Props) {
   return (
     <Elements
@@ -100,9 +89,9 @@ export default function StripePaymentForm({ clientSecret, returnUrl }: Props) {
         appearance: {
           theme: "stripe",
           variables: {
-            colorPrimary:    "#b45309", // amber-700 to match the app
-            borderRadius:    "12px",
-            fontFamily:      "var(--font-sans)",
+            colorPrimary:  "#b45309",
+            borderRadius:  "12px",
+            fontFamily:    "var(--font-sans)",
           },
         },
       }}

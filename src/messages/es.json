@@ -6,6 +6,18 @@
     "notice": "Tu anfitrión te ha compartido un enlace privado. Úsalo para acceder y reservar servicios durante tu estancia.",
     "servicesLabel": "Servicios Disponibles"
   },
+  "services": {
+    "chef":      { "label": "Chef Privado",      "description": "Experiencias culinarias en la villa" },
+    "cleaning":  { "label": "Limpieza",           "description": "Limpieza y orden completo de la villa" },
+    "groceries": { "label": "Compra",             "description": "Productos frescos a domicilio" },
+    "yoga":      { "label": "Yoga y Fitness",     "description": "Sesiones de entrenamiento personal" },
+    "massage":   { "label": "Masajes",            "description": "Tratamientos de spa en la villa" },
+    "transfer":  { "label": "Traslados",          "description": "Transporte al aeropuerto y ciudad" },
+    "tours":     { "label": "Excursiones",        "description": "Experiencias guiadas en Málaga" },
+    "wine":      { "label": "Vinos y Bebidas",    "description": "Selección de vinos curada" },
+    "childcare": { "label": "Cuidado de Niños",   "description": "Canguro profesional" },
+    "laundry":   { "label": "Lavandería",         "description": "Lavado, secado y planchado" }
+  },
   "guest": {
     "access": {
       "title": "Acceso no disponible",
