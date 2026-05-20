@@ -4,6 +4,7 @@
 
 import { stripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendBookingConfirmedEmail } from "@/lib/emails";
 import { NextRequest, NextResponse } from "next/server";
 
 // Stripe requires the raw request body (not parsed JSON) to verify the signature.
@@ -31,17 +32,48 @@ export async function POST(request: NextRequest) {
   const db = createAdminClient();
 
   if (event.type === "payment_intent.succeeded") {
-    const intent = event.data.object;
+    const intent    = event.data.object;
     const bookingId = intent.metadata?.booking_id;
 
     if (bookingId) {
       await db
         .from("bookings")
-        .update({
-          stripe_payment_status: "paid",
-          status:                "confirmed",
-        })
+        .update({ stripe_payment_status: "paid", status: "confirmed" })
         .eq("id", bookingId);
+
+      // Fetch data needed for the confirmation email
+      const { data: booking } = await db
+        .from("bookings")
+        .select("guest_session_id, provider_service_id, booking_date, start_time, total_amount")
+        .eq("id", bookingId)
+        .single();
+
+      if (booking) {
+        const [{ data: session }, { data: ps }] = await Promise.all([
+          db.from("guest_sessions").select("guest_name, guest_email, access_token").eq("id", booking.guest_session_id).single(),
+          db.from("provider_services").select("service_id").eq("id", booking.provider_service_id).single(),
+        ]);
+
+        if (session?.guest_email && ps) {
+          const { data: service } = await db
+            .from("services")
+            .select("name")
+            .eq("id", ps.service_id)
+            .single();
+
+          const serviceName = service ? (service.name as Record<string, string>).en : "Service";
+
+          await sendBookingConfirmedEmail({
+            guestName:   session.guest_name,
+            guestEmail:  session.guest_email,
+            serviceName,
+            bookingDate: booking.booking_date,
+            startTime:   booking.start_time,
+            totalAmount: booking.total_amount,
+            accessToken: session.access_token,
+          });
+        }
+      }
     }
   }
 

@@ -7,6 +7,11 @@ import { getTranslations } from "next-intl/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { BookingStatus } from "@/types/database";
+import {
+  sendBookingReceivedEmail,
+  sendBookingConfirmedEmail,
+  sendAdminNewBookingEmail,
+} from "@/lib/emails";
 
 type ActionState = { error: string } | null;
 
@@ -62,7 +67,7 @@ export async function createBookingAction(
   }
 
   const [{ data: service }, { data: provider }] = await Promise.all([
-    db.from("services").select("base_price, price_unit").eq("id", ps.service_id).single(),
+    db.from("services").select("base_price, price_unit, name").eq("id", ps.service_id).single(),
     db.from("providers").select("commission_rate").eq("id", ps.provider_id).single(),
   ]);
 
@@ -104,6 +109,27 @@ export async function createBookingAction(
   });
 
   if (error) return { error: error.message };
+
+  // Send emails — errors are caught inside, never block the redirect
+  const serviceName = service ? (service.name as Record<string, string>).en : "Service";
+  if (session.guest_email) {
+    await sendBookingReceivedEmail({
+      guestName:   session.guest_name,
+      guestEmail:  session.guest_email,
+      serviceName,
+      bookingDate: bookingDate,
+      startTime:   startTime || null,
+      totalAmount,
+      accessToken: session.access_token,
+    });
+  }
+  await sendAdminNewBookingEmail({
+    guestName:   session.guest_name,
+    serviceName,
+    bookingDate,
+    startTime:   startTime || null,
+    totalAmount,
+  });
 
   redirect(`/${locale}/stay/${token}/bookings`);
 }
@@ -161,6 +187,42 @@ export async function updateBookingStatusAction(
     .eq("id", bookingId);
 
   if (error) return { error: error.message };
+
+  // When admin manually confirms, notify the guest
+  if (newStatus === "confirmed") {
+    const { data: booking } = await db
+      .from("bookings")
+      .select("guest_session_id, provider_service_id, booking_date, start_time, total_amount")
+      .eq("id", bookingId)
+      .single();
+
+    if (booking) {
+      const [{ data: session }, { data: ps }] = await Promise.all([
+        db.from("guest_sessions").select("guest_name, guest_email, access_token").eq("id", booking.guest_session_id).single(),
+        db.from("provider_services").select("service_id").eq("id", booking.provider_service_id).single(),
+      ]);
+
+      if (session?.guest_email && ps) {
+        const { data: service } = await db
+          .from("services")
+          .select("name")
+          .eq("id", ps.service_id)
+          .single();
+
+        const serviceName = service ? (service.name as Record<string, string>).en : "Service";
+
+        await sendBookingConfirmedEmail({
+          guestName:   session.guest_name,
+          guestEmail:  session.guest_email,
+          serviceName,
+          bookingDate: booking.booking_date,
+          startTime:   booking.start_time,
+          totalAmount: booking.total_amount,
+          accessToken: session.access_token,
+        });
+      }
+    }
+  }
 
   revalidatePath("/[locale]/admin/bookings", "page");
   return null;
