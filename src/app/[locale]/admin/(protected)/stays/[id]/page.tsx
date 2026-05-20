@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { deleteStayAction } from "@/actions/stays";
 import CopyButton from "@/components/admin/CopyButton";
+import DownloadQrButton from "@/components/admin/DownloadQrButton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -108,8 +109,9 @@ export default async function StayDetailPage({
         <div className="flex items-center gap-2 bg-muted/50 rounded-xl px-4 py-3 mb-3">
           <code className="text-sm text-foreground flex-1 break-all">{guestLink}</code>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <CopyButton text={guestLink} label="Copy link" />
+          <DownloadQrButton url={guestLink} guestName={stay.guest_name} />
           <a href={guestLink} target="_blank" rel="noopener noreferrer">
             <Button variant="outline" size="sm" className="gap-1.5">
               <ExternalLink className="h-3.5 w-3.5" /> Preview
