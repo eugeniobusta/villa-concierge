@@ -79,7 +79,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
       <header className="sticky top-0 z-50 border-b border-border/60 dark:border-white/8
         bg-background/90 dark:bg-[#0a1525]/94 backdrop-blur-xl transition-colors duration-300">
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
-          <SanchamarLogo variant="full" height={32} />
+          <SanchamarLogo variant="full" height={36} />
           <div className="flex items-center gap-1">
             <LanguageSwitcher />
             <ThemeToggle />
@@ -133,21 +133,12 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
               {/* Left */}
               <div>
                 {/* Brand */}
-                <div className="flex items-center gap-3 mb-5">
-                  <SanchamarLogo variant="mark" height={48} />
+                <div className="flex items-center gap-3 mb-7">
+                  <SanchamarLogo variant="mark" height={64} />
                   <div>
-                    <p className="text-white font-bold text-xl leading-tight tracking-tight">Sanchamar</p>
+                    <p className="text-white font-bold text-2xl leading-tight tracking-tight">Sanchamar</p>
                     <p className="text-white/55 text-xs mt-0.5">Gestión de activos inmobiliarios</p>
                   </div>
-                </div>
-
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
-                  bg-white/15 border border-white/25 backdrop-blur-sm mb-5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-pulse" />
-                  <span className="text-xs font-medium text-white/90 tracking-wide uppercase">
-                    {t("badge")}
-                  </span>
                 </div>
 
                 {/* Headline */}
@@ -215,11 +206,9 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             <rect x="110" y="122" width="42" height="48" rx="2" fill="var(--sv-b2)"/>
             <path d="M108 122 Q131 100 154 122 Z" fill="var(--sv-b2)"/>
             <rect x="123" y="136" width="14" height="16" rx="2" fill="var(--sv-glow)" opacity="0.55"/>
-            {/* Labels — ABOVE buildings with room */}
-            <SkyLabel x={131} y={88}>Alcazaba</SkyLabel>
-            <line x1="131" y1="91" x2="131" y2="100" stroke="var(--sv-lbl-line)" strokeWidth="0.8"/>
-            <SkyLabel x={72} y={100}>Monte Gibralfaro</SkyLabel>
-            <line x1="72" y1="103" x2="72" y2="112" stroke="var(--sv-lbl-line)" strokeWidth="0.8"/>
+            {/* Labels — placed in lower building zone, always visible at any viewport width */}
+            <SkyLabel x={131} y={176}>Alcazaba</SkyLabel>
+            <SkyLabel x={62} y={156}>Monte Gibralfaro</SkyLabel>
 
             {/* ── Old town buildings ── */}
             {[[255,178,28,56],[278,168,25,68],[298,182,32,51],[325,175,22,60],[345,188,30,46],[368,178,26,55],[388,195,28,40]].map(([x,y,w,h],i) => (
@@ -240,9 +229,8 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             {/* Right tower (unfinished) */}
             <rect x="616" y="120" width="48" height="36" rx="2" fill="var(--sv-b2)"/>
             <rect x="628" y="132" width="20" height="14" rx="2" fill="var(--sv-glow)" opacity="0.28"/>
-            {/* Cathedral label — between towers, above the nave */}
-            <SkyLabel x={550} y={55}>Catedral de Málaga</SkyLabel>
-            <line x1="550" y1="58" x2="550" y2="68" stroke="var(--sv-lbl-line)" strokeWidth="0.8"/>
+            {/* Cathedral label — inside nave, always visible */}
+            <SkyLabel x={550} y={168}>Catedral de Málaga</SkyLabel>
 
             {/* ── Buildings east ── */}
             {[695,720,748,773,800,826,854,880,908,935,962,990,1018,1046].map((x, i) => (
@@ -287,9 +275,8 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             {/* Lighthouse */}
             <circle cx="1195" cy="183" r="4" fill="var(--sv-glow)" opacity="0.95"/>
             <circle cx="1195" cy="183" r="10" fill="var(--sv-glow)" opacity="0.22"/>
-            {/* Muelle Uno label — above port buildings */}
-            <SkyLabel x={1200} y={58}>Muelle Uno · Puerto</SkyLabel>
-            <line x1="1200" y1="61" x2="1200" y2="172" stroke="var(--sv-lbl-line)" strokeWidth="0.8"/>
+            {/* Muelle Uno label — above port buildings, always visible */}
+            <SkyLabel x={1220} y={190}>Muelle Uno · Puerto</SkyLabel>
 
             {/* ── Sea ── */}
             <rect x="0" y="278" width="1440" height="62" fill="var(--sv-sea)"/>

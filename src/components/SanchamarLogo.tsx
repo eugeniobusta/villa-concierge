@@ -9,33 +9,36 @@ interface Props {
   height?: number;
 }
 
-/**
- * Sanchamar brand logo — transparent PNG, seamlessly blends with any background.
- */
+// SVG aspect ratios from the traced files (viewBox dimensions)
+const MARK_RATIO = 723 / 579;  // 1.248
+const FULL_RATIO = 1598 / 390; // 4.098
+
 export function SanchamarLogo({ variant = "mark", height = 32, className }: Props) {
   if (variant === "full") {
-    // wordmark is approximately 5:1 aspect ratio
-    const w = Math.round(height * 5.2);
+    const w = Math.round(height * FULL_RATIO);
     return (
       <Image
-        src="/sanchamar-logo.png"
+        src="/sanchamar-logo.svg"
         alt="Sanchamar"
         width={w}
         height={height}
         className={cn("object-contain", className)}
         priority
+        unoptimized
       />
     );
   }
 
+  const w = Math.round(height * MARK_RATIO);
   return (
     <Image
-      src="/sanchamar-s.png"
+      src="/sanchamar-s.svg"
       alt="Sanchamar"
-      width={height}
+      width={w}
       height={height}
       className={cn("object-contain", className)}
       priority
+      unoptimized
     />
   );
 }
