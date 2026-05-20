@@ -1,9 +1,12 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { getActiveSession } from "@/lib/guest-session";
 import { getTranslations } from "next-intl/server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { BookingStatus } from "@/types/database";
 
 type ActionState = { error: string } | null;
 
@@ -124,4 +127,41 @@ export async function cancelBookingAction(formData: FormData): Promise<void> {
     .in("status", ["pending", "confirmed"]);
 
   redirect(`/${locale}/stay/${token}/bookings`);
+}
+
+const VALID_STATUSES: BookingStatus[] = [
+  "pending", "confirmed", "in_progress", "completed", "cancelled",
+];
+
+export async function updateBookingStatusAction(
+  bookingId: string,
+  newStatus: BookingStatus
+): Promise<{ error?: string } | null> {
+  // Verify the caller is a logged-in admin
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const adminEmails = (process.env.ADMIN_EMAIL ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (!user || !adminEmails.includes(user.email?.toLowerCase() ?? "")) {
+    return { error: "Unauthorized" };
+  }
+
+  if (!VALID_STATUSES.includes(newStatus)) {
+    return { error: "Invalid status value." };
+  }
+
+  const db = createAdminClient();
+  const { error } = await db
+    .from("bookings")
+    .update({ status: newStatus })
+    .eq("id", bookingId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/[locale]/admin/bookings", "page");
+  return null;
 }

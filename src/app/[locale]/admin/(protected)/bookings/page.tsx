@@ -1,22 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ExportCsvButton } from "@/components/ExportCsvButton";
+import BookingStatusSelect from "@/components/admin/BookingStatusSelect";
 import type { BookingStatus } from "@/types/database";
-
-const STATUS_STYLES: Record<BookingStatus, string> = {
-  pending:     "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/50 dark:text-yellow-300",
-  confirmed:   "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
-  in_progress: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
-  completed:   "bg-muted text-muted-foreground",
-  cancelled:   "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
-};
-
-const STATUS_LABELS: Record<BookingStatus, string> = {
-  pending:     "Pending",
-  confirmed:   "Confirmed",
-  in_progress: "In Progress",
-  completed:   "Completed",
-  cancelled:   "Cancelled",
-};
 
 function fmt(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-GB", {
@@ -147,9 +132,10 @@ export default async function AdminBookingsPage({
                       )}
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[b.status as BookingStatus]}`}>
-                        {STATUS_LABELS[b.status as BookingStatus]}
-                      </span>
+                      <BookingStatusSelect
+                        bookingId={b.id}
+                        initialStatus={b.status as BookingStatus}
+                      />
                     </td>
                     <td className="px-5 py-4 text-right font-medium text-foreground">
                       €{b.total_amount.toFixed(2)}
