@@ -2,7 +2,7 @@
 
 import { usePathname } from "@/lib/navigation";
 import { logoutAction } from "@/actions/auth";
-import { LayoutDashboard, CalendarDays, Users, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Users, ClipboardList, Boxes, LogOut } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -11,6 +11,7 @@ import { SanchamarLogo } from "@/components/SanchamarLogo";
 const navItems = [
   { label: "Dashboard",   href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Guest Stays", href: "/admin/stays",     icon: CalendarDays },
+  { label: "Services",    href: "/admin/services",  icon: Boxes },
   { label: "Providers",   href: "/admin/providers", icon: Users },
   { label: "Bookings",    href: "/admin/bookings",  icon: ClipboardList },
 ];
