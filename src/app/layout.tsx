@@ -12,6 +12,7 @@ export const metadata: Metadata = {
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
       : "http://localhost:3000")
   ),
+  manifest: "/manifest.webmanifest",
   icons: {
     icon:      [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png" }],
     apple:     [{ url: "/apple-icon.png", sizes: "180x180" }],
