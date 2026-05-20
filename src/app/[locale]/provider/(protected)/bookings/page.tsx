@@ -1,6 +1,7 @@
 import { getProviderSession } from "@/lib/provider-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
+import { ExportCsvButton } from "@/components/ExportCsvButton";
 import type { BookingStatus } from "@/types/database";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
@@ -56,11 +57,32 @@ export default async function ProviderBookingsPage() {
     (services ?? []).map((s) => [s.id, (s.name as Record<string, string>).en])
   );
 
+  const csvRows = (bookings ?? []).map((b) => {
+    const svcId = serviceIdMap[b.provider_service_id];
+    return [
+      serviceNames[svcId] ?? "",
+      b.booking_date,
+      b.start_time ? b.start_time.slice(0, 5) : "",
+      b.status,
+      b.provider_amount.toFixed(2),
+    ];
+  });
+
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <div className="p-4 md:p-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-foreground">Bookings</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{bookings?.length ?? 0} total</p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Bookings</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{bookings?.length ?? 0} total</p>
+        </div>
+        <ExportCsvButton
+          filename={`sanchamar-my-bookings-${today}.csv`}
+          headers={["Service", "Date", "Time", "Status", "Your Cut (€)"]}
+          rows={csvRows}
+          disabled={!bookings?.length}
+        />
       </div>
 
       {!bookings?.length ? (

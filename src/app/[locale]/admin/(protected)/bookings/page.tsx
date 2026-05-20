@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ExportCsvButton } from "@/components/ExportCsvButton";
 import type { BookingStatus } from "@/types/database";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
@@ -72,13 +73,38 @@ export default async function AdminBookingsPage({
     .filter((b) => b.status !== "cancelled")
     .reduce((s, b) => s + b.platform_amount, 0);
 
+  const csvRows = (bookings ?? []).map((b) => {
+    const svcId  = psToService[b.provider_service_id];
+    const provId = psToProvider[b.provider_service_id];
+    return [
+      sessionMap[b.guest_session_id] ?? "",
+      svcNames[svcId] ?? "",
+      provNames[provId] ?? "",
+      b.booking_date,
+      b.start_time ? b.start_time.slice(0, 5) : "",
+      b.status,
+      b.total_amount.toFixed(2),
+      b.platform_amount.toFixed(2),
+    ];
+  });
+
+  const today = new Date().toISOString().split("T")[0];
+
   return (
     <div className="p-4 md:p-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-foreground">All Bookings</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          {bookings?.length ?? 0} total · €{totalRevenue.toFixed(2)} platform revenue
-        </p>
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">All Bookings</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {bookings?.length ?? 0} total · €{totalRevenue.toFixed(2)} platform revenue
+          </p>
+        </div>
+        <ExportCsvButton
+          filename={`sanchamar-bookings-${today}.csv`}
+          headers={["Guest", "Service", "Provider", "Date", "Time", "Status", "Total (€)", "Platform Cut (€)"]}
+          rows={csvRows}
+          disabled={!bookings?.length}
+        />
       </div>
 
       {!bookings?.length ? (
