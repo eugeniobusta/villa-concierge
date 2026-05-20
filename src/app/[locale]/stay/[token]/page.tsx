@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import ServicesGrid from "@/components/guest/ServicesGrid";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, ClipboardList } from "lucide-react";
+import { ArrowRight, ClipboardList, MessageSquareHeart } from "lucide-react";
 
 export default async function GuestHomePage({
   params,
@@ -33,6 +33,21 @@ export default async function GuestHomePage({
 
   return (
     <div>
+      {/* Welcome message from host */}
+      {session.welcome_message && (
+        <div className="bg-primary/6 border border-primary/20 rounded-2xl p-5 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <MessageSquareHeart className="h-4 w-4 text-primary flex-shrink-0" />
+            <p className="text-xs font-semibold text-primary uppercase tracking-wider">
+              Message from your host
+            </p>
+          </div>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+            {session.welcome_message}
+          </p>
+        </div>
+      )}
+
       {/* My Bookings banner — always visible, highlighted if active bookings exist */}
       <Link
         data-tour="my-bookings-banner"

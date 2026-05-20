@@ -56,9 +56,25 @@ export default function NewStayPage() {
 
             <div className="col-span-2 space-y-1.5">
               <Label htmlFor="notes">
-                Notes <span className="text-muted-foreground font-normal">(optional)</span>
+                Notes <span className="text-muted-foreground font-normal">(optional, admin only)</span>
               </Label>
               <Input id="notes" name="notes" placeholder="Family of 4, allergic to nuts…" />
+            </div>
+
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="welcome_message">
+                Welcome message <span className="text-muted-foreground font-normal">(shown to guest)</span>
+              </Label>
+              <textarea
+                id="welcome_message"
+                name="welcome_message"
+                rows={4}
+                placeholder={"Welcome, Maria! 🏠\n\nWiFi: Casa123 · Pool towels in the cabinet by the terrace.\nCheckout is at 11am. Enjoy your stay!"}
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                Displayed at the top of the guest portal. Supports line breaks.
+              </p>
             </div>
           </div>
 

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { deleteStayAction } from "@/actions/stays";
 import CopyButton from "@/components/admin/CopyButton";
 import DownloadQrButton from "@/components/admin/DownloadQrButton";
+import WelcomeMessageEditor from "@/components/admin/WelcomeMessageEditor";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -149,6 +150,14 @@ export default async function StayDetailPage({
             </div>
           )}
         </dl>
+      </div>
+
+      {/* Welcome message */}
+      <div className="bg-card rounded-2xl border border-border p-6 mb-4 shadow-warm-sm">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+          Welcome Message <span className="normal-case font-normal ml-1 text-muted-foreground/60">· shown to guest</span>
+        </p>
+        <WelcomeMessageEditor stayId={stay.id} initial={stay.welcome_message ?? null} />
       </div>
 
       {/* Bookings */}

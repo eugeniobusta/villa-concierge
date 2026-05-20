@@ -36,6 +36,7 @@ type GuestSessionRow = {
   check_in: string;
   check_out: string;
   notes: string | null;
+  welcome_message: string | null;
   created_at: string;
 };
 type ServiceCategoryRow = {

@@ -20,7 +20,8 @@ export async function createStayAction(
   const guest_email = (formData.get("guest_email") as string)?.trim() || null;
   const check_in = formData.get("check_in") as string;
   const check_out = formData.get("check_out") as string;
-  const notes = (formData.get("notes") as string)?.trim() || null;
+  const notes           = (formData.get("notes") as string)?.trim() || null;
+  const welcome_message = (formData.get("welcome_message") as string)?.trim() || null;
 
   if (!guest_name || !check_in || !check_out) {
     return { error: "Guest name, check-in and check-out are required." };
@@ -46,7 +47,7 @@ export async function createStayAction(
 
   const { data: stay, error } = await supabase
     .from("guest_sessions")
-    .insert({ guest_name, guest_email, check_in, check_out, notes, access_token })
+    .insert({ guest_name, guest_email, check_in, check_out, notes, welcome_message, access_token })
     .select("id")
     .single();
 
@@ -55,6 +56,20 @@ export async function createStayAction(
   }
 
   redirect(`/${locale}/admin/stays/${stay.id}`);
+}
+
+export async function updateWelcomeMessageAction(
+  stayId: string,
+  message: string
+): Promise<{ error?: string } | null> {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("guest_sessions")
+    .update({ welcome_message: message.trim() || null })
+    .eq("id", stayId);
+  if (error) return { error: error.message };
+  revalidatePath("/[locale]/admin/stays/[id]", "page");
+  return null;
 }
 
 export async function deleteStayAction(id: string, locale: string) {
