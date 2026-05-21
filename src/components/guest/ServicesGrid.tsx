@@ -50,9 +50,14 @@ export default function ServicesGrid({ categories, services, coveredServiceIds, 
   const l    = useLocale();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  const filtered = activeCategory
+  const filtered = (activeCategory
     ? services.filter((s) => s.category_id === activeCategory)
-    : services;
+    : services
+  ).slice().sort((a, b) => {
+    const aAvail = coveredServiceIds.has(a.id) ? 0 : 1;
+    const bAvail = coveredServiceIds.has(b.id) ? 0 : 1;
+    return aAvail - bAvail; // available (0) before unavailable (1), stable within each group
+  });
 
   return (
     <div>
