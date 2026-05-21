@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { ExportCsvButton } from "@/components/ExportCsvButton";
 import ProviderBookingActions from "@/components/provider/ProviderBookingActions";
-import { User, CalendarRange, Clock, MessageSquare } from "lucide-react";
+import { User, Clock, MessageSquare } from "lucide-react";
 import type { BookingStatus } from "@/types/database";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
@@ -25,12 +25,6 @@ const STATUS_LABELS: Record<BookingStatus, string> = {
 function fmtLong(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-GB", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
-}
-
-function fmtShort(d: string) {
-  return new Date(d + "T00:00:00").toLocaleDateString("en-GB", {
-    day: "numeric", month: "short",
   });
 }
 
@@ -189,16 +183,6 @@ export default async function ProviderBookingsPage() {
                             {guest.guest_email}
                           </a>
                         )}
-                      </div>
-                    )}
-
-                    {/* Stay dates */}
-                    {guest && (
-                      <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                        <CalendarRange className="h-3.5 w-3.5 flex-shrink-0" />
-                        <span>
-                          Stay: {fmtShort(guest.check_in)} – {fmtShort(guest.check_out)}
-                        </span>
                       </div>
                     )}
 

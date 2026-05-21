@@ -104,6 +104,7 @@ type BookingRow = {
   platform_amount: number;
   stripe_payment_intent_id: string | null;
   stripe_payment_status: PaymentStatus;
+  cancelled_by: "guest" | "provider" | "admin" | null;
   created_at: string;
   updated_at: string;
 };

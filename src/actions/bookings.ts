@@ -155,7 +155,7 @@ export async function cancelBookingAction(formData: FormData): Promise<void> {
   // Only cancel if booking belongs to this session and hasn't started/completed
   await db
     .from("bookings")
-    .update({ status: "cancelled" })
+    .update({ status: "cancelled", cancelled_by: "guest" })
     .eq("id", bookingId)
     .eq("guest_session_id", session.id)
     .in("status", ["pending", "confirmed"]);
@@ -191,7 +191,10 @@ export async function updateBookingStatusAction(
   const db = createAdminClient();
   const { error } = await db
     .from("bookings")
-    .update({ status: newStatus })
+    .update({
+      status: newStatus,
+      ...(newStatus === "cancelled" ? { cancelled_by: "admin" } : {}),
+    })
     .eq("id", bookingId);
 
   if (error) return { error: error.message };
@@ -323,7 +326,7 @@ export async function providerDeclineBookingAction(bookingId: string): Promise<v
 
   if (!ps) return;
 
-  await db.from("bookings").update({ status: "cancelled" }).eq("id", bookingId);
+  await db.from("bookings").update({ status: "cancelled", cancelled_by: "provider" }).eq("id", bookingId);
 
   revalidatePath("/[locale]/provider/bookings", "page");
 

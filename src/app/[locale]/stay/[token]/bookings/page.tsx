@@ -16,6 +16,21 @@ const STATUS_STYLES: Record<BookingStatus, string> = {
   cancelled:   "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
 };
 
+function cancelledBadge(cancelledBy: string | null) {
+  if (cancelledBy === "provider") {
+    return {
+      cls:  "bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-400",
+      label: "Declined by provider",
+      note:  "The provider was unable to accommodate this request. You have not been charged.",
+    };
+  }
+  return {
+    cls:   "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400",
+    label: "Cancelled by you",
+    note:  "You cancelled this booking.",
+  };
+}
+
 export default async function MyBookingsPage({
   params,
   searchParams,
@@ -117,13 +132,15 @@ export default async function MyBookingsPage({
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <span
-                      className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                        STATUS_STYLES[b.status as BookingStatus]
-                      }`}
-                    >
-                      {t(`status.${b.status as BookingStatus}`)}
-                    </span>
+                    {b.status === "cancelled" ? (
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cancelledBadge(b.cancelled_by).cls}`}>
+                        {cancelledBadge(b.cancelled_by).label}
+                      </span>
+                    ) : (
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[b.status as BookingStatus]}`}>
+                        {t(`status.${b.status as BookingStatus}`)}
+                      </span>
+                    )}
                     <p className="text-sm font-semibold text-foreground mt-2">
                       €{b.total_amount.toFixed(2)}
                     </p>
@@ -133,6 +150,13 @@ export default async function MyBookingsPage({
                 {b.special_requests && (
                   <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
                     &ldquo;{b.special_requests}&rdquo;
+                  </p>
+                )}
+
+                {/* Cancellation context note */}
+                {b.status === "cancelled" && (
+                  <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50">
+                    {cancelledBadge(b.cancelled_by).note}
                   </p>
                 )}
 
