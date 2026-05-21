@@ -16,12 +16,12 @@ export async function createStayAction(
   formData: FormData
 ): Promise<ActionState> {
   const locale = (formData.get("locale") as string) || "en";
-  const guest_name = (formData.get("guest_name") as string)?.trim();
-  const guest_email = (formData.get("guest_email") as string)?.trim() || null;
-  const check_in = formData.get("check_in") as string;
-  const check_out = formData.get("check_out") as string;
-  const notes           = (formData.get("notes") as string)?.trim() || null;
-  const welcome_message = (formData.get("welcome_message") as string)?.trim() || null;
+  const guest_name      = ((formData.get("guest_name") as string)?.trim() ?? "").slice(0, 120);
+  const guest_email     = (formData.get("guest_email") as string)?.trim() || null;
+  const check_in        = formData.get("check_in") as string;
+  const check_out       = formData.get("check_out") as string;
+  const notes           = ((formData.get("notes") as string)?.trim() || null)?.slice(0, 1000) ?? null;
+  const welcome_message = ((formData.get("welcome_message") as string)?.trim() || null)?.slice(0, 2000) ?? null;
 
   if (!guest_name || !check_in || !check_out) {
     return { error: "Guest name, check-in and check-out are required." };

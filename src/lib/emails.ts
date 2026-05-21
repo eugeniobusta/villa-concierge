@@ -1,6 +1,16 @@
 import { Resend } from "resend";
 import { getAppUrl } from "./app-url";
 
+// Prevent user-supplied strings from breaking email HTML structure
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Fire-and-forget wrapper: logs on failure, never throws.
 // Booking actions must not fail just because an email didn't send.
 // The Resend client is instantiated here (not at module level) so a missing
@@ -77,7 +87,7 @@ function detailsTable(
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f8f9;border:1px solid #e4e4e7;border-radius:10px;margin:20px 0;">
 <tr><td style="padding:16px 20px;">
   <table width="100%" cellpadding="0" cellspacing="0">
-    <tr><td style="padding:6px 0;color:#71717a;font-size:13px;width:50%;">Service</td><td style="padding:6px 0;font-weight:600;color:#0e1826;font-size:13px;text-align:right;">${serviceName}</td></tr>
+    <tr><td style="padding:6px 0;color:#71717a;font-size:13px;width:50%;">Service</td><td style="padding:6px 0;font-weight:600;color:#0e1826;font-size:13px;text-align:right;">${esc(serviceName)}</td></tr>
     <tr><td style="padding:6px 0;color:#71717a;font-size:13px;">Date</td><td style="padding:6px 0;font-weight:600;color:#0e1826;font-size:13px;text-align:right;">${fmtDate(bookingDate)}</td></tr>
     ${timeRow}
     <tr><td style="border-top:1px solid #e4e4e7;padding:10px 0 4px;color:#71717a;font-size:13px;">Total</td><td style="border-top:1px solid #e4e4e7;padding:10px 0 4px;font-weight:700;color:#c4940a;font-size:15px;text-align:right;">€${totalAmount.toFixed(2)}</td></tr>
@@ -103,14 +113,14 @@ export async function sendBookingReceivedEmail(data: BookingEmailData) {
   const url  = `${getAppUrl()}/en/stay/${data.accessToken}/bookings`;
   const body = `
     <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
-      Hi <strong>${data.guestName}</strong>, we've received your booking request.
+      Hi <strong>${esc(data.guestName)}</strong>, we've received your booking request.
       Our team will review it and confirm shortly.
     </p>
     ${detailsTable(data.serviceName, data.bookingDate, data.startTime, data.totalAmount)}`;
 
   await send(
     data.guestEmail,
-    `Booking received — ${data.serviceName}`,
+    `Booking received — ${esc(data.serviceName)}`,
     layout("Booking Received", body, url, "View my bookings →"),
   );
 }
@@ -120,14 +130,14 @@ export async function sendBookingConfirmedEmail(data: BookingEmailData) {
   const url  = `${getAppUrl()}/en/stay/${data.accessToken}/bookings`;
   const body = `
     <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
-      Great news, <strong>${data.guestName}</strong>!
+      Great news, <strong>${esc(data.guestName)}</strong>!
       Your booking is confirmed — everything is arranged. See you in Malaga.
     </p>
     ${detailsTable(data.serviceName, data.bookingDate, data.startTime, data.totalAmount)}`;
 
   await send(
     data.guestEmail,
-    `Confirmed — ${data.serviceName}`,
+    `Confirmed — ${esc(data.serviceName)}`,
     layout("Booking Confirmed", body, url, "View booking details →"),
   );
 }
@@ -137,14 +147,14 @@ export async function sendBookingAcceptedEmail(data: BookingEmailData) {
   const url  = `${getAppUrl()}/en/stay/${data.accessToken}/bookings`;
   const body = `
     <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
-      Good news, <strong>${data.guestName}</strong>! The provider has accepted your request.
+      Good news, <strong>${esc(data.guestName)}</strong>! The provider has accepted your request.
       Complete your payment now to secure the booking.
     </p>
     ${detailsTable(data.serviceName, data.bookingDate, data.startTime, data.totalAmount)}`;
 
   await send(
     data.guestEmail,
-    `Accepted — pay now to confirm your ${data.serviceName}`,
+    `Accepted — pay now to confirm your ${esc(data.serviceName)}`,
     layout("Booking Accepted", body, url, "Pay now →"),
   );
 }
@@ -154,15 +164,15 @@ export async function sendBookingDeclinedEmail(data: BookingEmailData) {
   const url  = `${getAppUrl()}/en/stay/${data.accessToken}`;
   const body = `
     <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
-      Hi <strong>${data.guestName}</strong>, unfortunately the provider is not available for
-      your <strong>${data.serviceName}</strong> request. You have not been charged.
+      Hi <strong>${esc(data.guestName)}</strong>, unfortunately the provider is not available for
+      your <strong>${esc(data.serviceName)}</strong> request. You have not been charged.
       Please browse our other services or contact your host for alternatives.
     </p>
     ${detailsTable(data.serviceName, data.bookingDate, data.startTime, data.totalAmount)}`;
 
   await send(
     data.guestEmail,
-    `Booking unavailable — ${data.serviceName}`,
+    `Booking unavailable — ${esc(data.serviceName)}`,
     layout("Booking Declined", body, url, "Browse services →"),
   );
 }
@@ -191,14 +201,14 @@ export async function sendAdminNewBookingEmail({
   const url  = `${getAppUrl()}/en/admin/bookings`;
   const body = `
     <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
-      <strong>${guestName}</strong> just submitted a new booking request.
+      <strong>${esc(guestName)}</strong> just submitted a new booking request.
     </p>
     ${detailsTable(serviceName, bookingDate, startTime, totalAmount)}`;
 
   for (const to of adminEmails) {
     await send(
       to,
-      `New booking — ${guestName} · ${serviceName}`,
+      `New booking — ${esc(guestName)} · ${esc(serviceName)}`,
       layout("New Booking Request", body, url, "Review in admin →"),
     );
   }

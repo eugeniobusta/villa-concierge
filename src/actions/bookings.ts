@@ -27,7 +27,7 @@ export async function createBookingAction(
   const bookingDate      = formData.get("booking_date") as string;
   const startTime        = formData.get("start_time") as string;
   const durationHours    = parseFloat((formData.get("duration_hours") as string) || "0");
-  const notes            = (formData.get("notes") as string)?.trim() || null;
+  const notes            = ((formData.get("notes") as string)?.trim() || null)?.slice(0, 1000) ?? null;
 
   const [session, t] = await Promise.all([
     getActiveSession(token),
@@ -301,11 +301,12 @@ export async function providerAcceptBookingAction(bookingId: string): Promise<vo
   if (booking.stripe_payment_intent_id) {
     try {
       await stripe.paymentIntents.capture(booking.stripe_payment_intent_id);
-      // The payment_intent.succeeded webhook will fire and set stripe_payment_status: "paid"
-      // + send the booking confirmed email to the guest
+      // The payment_intent.succeeded webhook fires next and sets stripe_payment_status: "paid"
+      // + sends the booking confirmed email to the guest
     } catch (err) {
-      console.error("[stripe] Capture failed for booking", bookingId, err);
-      // Don't block acceptance — admin can handle payment manually if needed
+      // Capture failed (expired auth, card issue): revert status so admin is aware
+      await db.from("bookings").update({ status: "pending" }).eq("id", bookingId);
+      console.error("[stripe] Capture failed — booking reverted to pending:", bookingId, err);
     }
   }
 

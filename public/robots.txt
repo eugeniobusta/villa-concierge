@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /*/admin/
+Disallow: /*/provider/
+Disallow: /*/stay/
+Allow: /
+
+Sitemap: https://villa-concierge-five.vercel.app/sitemap.xml

@@ -116,6 +116,12 @@ type BookingRow = {
 export interface Database {
   public: {
     Tables: {
+      stripe_webhook_events: {
+        Row:           { id: string; processed_at: string };
+        Insert:        { id: string; processed_at?: string };
+        Update:        { processed_at?: string };
+        Relationships: [];
+      };
       guest_sessions: {
         Row: GuestSessionRow;
         Insert: Omit<GuestSessionRow, "id" | "created_at"> & { id?: string; created_at?: string };

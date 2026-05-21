@@ -314,9 +314,14 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
         </div>
       </footer>
 
-      {/* ══ Portal links (discreet) ══ */}
+      {/* ══ Footer links ══ */}
       <div className="py-3 text-center border-t border-border/30">
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <Link href={`/${locale}/privacy`}
+            className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors">
+            Privacy Policy
+          </Link>
+          <span className="text-muted-foreground/20 text-xs">·</span>
           <Link href={`/${locale}/admin/login`}
             className="text-[11px] text-muted-foreground/35 hover:text-muted-foreground/70 transition-colors">
             Admin Portal ↗

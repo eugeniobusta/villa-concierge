@@ -1,10 +1,19 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 type ActionState = { error: string } | null;
+
+async function verifyAdmin(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const adminEmails = (process.env.ADMIN_EMAIL ?? "")
+    .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return !!(user && adminEmails.includes(user.email?.toLowerCase() ?? ""));
+}
 
 export async function createProviderAction(
   _prev: ActionState,
@@ -18,6 +27,7 @@ export async function createProviderAction(
   const commission_str = formData.get("commission_rate") as string;
   const serviceIds = formData.getAll("service_ids") as string[];
 
+  if (!await verifyAdmin()) return { error: "Unauthorized." };
   if (!name) return { error: "Provider name is required." };
 
   const commission_rate = parseFloat(commission_str) / 100;
@@ -65,6 +75,7 @@ export async function updateProviderAction(
   const serviceIds = formData.getAll("service_ids") as string[];
   const is_active = formData.get("is_active") === "true";
 
+  if (!await verifyAdmin()) return { error: "Unauthorized." };
   if (!name) return { error: "Provider name is required." };
 
   const commission_rate = parseFloat(commission_str) / 100;
@@ -95,6 +106,7 @@ export async function updateProviderAction(
 }
 
 export async function toggleProviderAction(id: string, isActive: boolean, locale: string) {
+  if (!await verifyAdmin()) return;
   const supabase = createAdminClient();
   await supabase.from("providers").update({ is_active: !isActive }).eq("id", id);
   revalidatePath(`/${locale}/admin/providers`);

@@ -2,10 +2,13 @@
 // Route groups (the "(protected)" folder name) don't appear in the URL —
 // /admin/dashboard and /admin/stays both get this layout invisibly.
 
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Toaster } from "@/components/ui/sonner";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function ProtectedAdminLayout({
   children,

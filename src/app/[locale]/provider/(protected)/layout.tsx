@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import { getProviderSession } from "@/lib/provider-session";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 import { redirect } from "next/navigation";
 import ProviderSidebar from "@/components/provider/ProviderSidebar";
 import { ProviderTour } from "@/components/tour/ProviderTour";

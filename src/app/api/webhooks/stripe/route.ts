@@ -58,6 +58,22 @@ export async function POST(request: NextRequest) {
 
   const db = createAdminClient();
 
+  // ── Idempotency: skip events we've already processed ──────────────────────
+  // Stripe retries webhooks on network errors — this prevents duplicate emails
+  // and double-captures. We store each processed event.id for 7 days.
+  const { error: idempotencyError } = await db
+    .from("stripe_webhook_events")
+    .insert({ id: event.id });
+
+  if (idempotencyError) {
+    // Duplicate key = already processed → silently ack
+    if (idempotencyError.code === "23505") {
+      return NextResponse.json({ received: true });
+    }
+    // Any other error: log but continue (better to process twice than miss)
+    console.error("[webhook] idempotency check failed:", idempotencyError.message);
+  }
+
   // ── Card was authorized (hold placed, not yet charged) ─────────────────────
   // This fires after the guest successfully completes the card form.
   // We send the "booking received" emails here — not in the server action —

@@ -62,9 +62,10 @@ export async function createServiceAction(
 
   const locale  = (formData.get("locale") as string) || "en";
   const fields  = extractFields(formData);
-  if (!fields.nameEn)         return { error: "English name is required." };
-  if (!fields.category_id)    return { error: "Please select a category." };
-  if (isNaN(fields.base_price)) return { error: "Enter a valid price." };
+  if (!fields.nameEn)                        return { error: "English name is required." };
+  if (fields.nameEn.length > 120)            return { error: "Name must be under 120 characters." };
+  if (!fields.category_id)                   return { error: "Please select a category." };
+  if (isNaN(fields.base_price) || fields.base_price <= 0) return { error: "Enter a valid price greater than 0." };
 
   const db   = createAdminClient();
   const slug = slugify(fields.nameEn);
