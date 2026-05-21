@@ -132,6 +132,41 @@ export async function sendBookingConfirmedEmail(data: BookingEmailData) {
   );
 }
 
+/** Sent to the guest when a provider accepts their request — prompts them to pay. */
+export async function sendBookingAcceptedEmail(data: BookingEmailData) {
+  const url  = `${getAppUrl()}/en/stay/${data.accessToken}/bookings`;
+  const body = `
+    <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
+      Good news, <strong>${data.guestName}</strong>! The provider has accepted your request.
+      Complete your payment now to secure the booking.
+    </p>
+    ${detailsTable(data.serviceName, data.bookingDate, data.startTime, data.totalAmount)}`;
+
+  await send(
+    data.guestEmail,
+    `Accepted — pay now to confirm your ${data.serviceName}`,
+    layout("Booking Accepted", body, url, "Pay now →"),
+  );
+}
+
+/** Sent to the guest when a provider declines their request. */
+export async function sendBookingDeclinedEmail(data: BookingEmailData) {
+  const url  = `${getAppUrl()}/en/stay/${data.accessToken}`;
+  const body = `
+    <p style="color:#52525b;font-size:14px;line-height:1.6;margin:0;">
+      Hi <strong>${data.guestName}</strong>, unfortunately the provider is not available for
+      your <strong>${data.serviceName}</strong> request. You have not been charged.
+      Please browse our other services or contact your host for alternatives.
+    </p>
+    ${detailsTable(data.serviceName, data.bookingDate, data.startTime, data.totalAmount)}`;
+
+  await send(
+    data.guestEmail,
+    `Booking unavailable — ${data.serviceName}`,
+    layout("Booking Declined", body, url, "Browse services →"),
+  );
+}
+
 /** Sent to every admin email when a new booking comes in. */
 export async function sendAdminNewBookingEmail({
   guestName,

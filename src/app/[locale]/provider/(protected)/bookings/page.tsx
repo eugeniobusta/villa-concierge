@@ -2,6 +2,7 @@ import { getProviderSession } from "@/lib/provider-session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import { ExportCsvButton } from "@/components/ExportCsvButton";
+import ProviderBookingActions from "@/components/provider/ProviderBookingActions";
 import type { BookingStatus } from "@/types/database";
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
@@ -90,41 +91,48 @@ export default async function ProviderBookingsPage() {
           <p className="text-muted-foreground">No bookings yet.</p>
         </div>
       ) : (
-        <div className="bg-card rounded-2xl border border-border overflow-x-auto shadow-warm-sm">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Service</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
-                <th className="text-left px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                <th className="text-right px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Your cut</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/50">
-              {(bookings ?? []).map((b) => {
-                const svcId = serviceIdMap[b.provider_service_id];
-                return (
-                  <tr key={b.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-5 py-4 font-medium text-foreground">
-                      {serviceNames[svcId] ?? "Service"}
-                    </td>
-                    <td className="px-5 py-4 text-muted-foreground">
+        <div className="space-y-3">
+          {(bookings ?? []).map((b) => {
+            const svcId  = serviceIdMap[b.provider_service_id];
+            const status = b.status as BookingStatus;
+            const isPending = status === "pending";
+            return (
+              <div
+                key={b.id}
+                className={`bg-card rounded-2xl border p-5 shadow-warm-sm transition-colors ${
+                  isPending ? "border-yellow-300 dark:border-yellow-800 bg-yellow-50/40 dark:bg-yellow-950/20" : "border-border"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <p className="font-medium text-foreground">{serviceNames[svcId] ?? "Service"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {fmt(b.booking_date)}
-                      {b.start_time && <span className="ml-1 text-muted-foreground/60">· {b.start_time.slice(0, 5)}</span>}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[b.status as BookingStatus]}`}>
-                        {STATUS_LABELS[b.status as BookingStatus]}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right font-medium text-foreground">
+                      {b.start_time && ` · ${b.start_time.slice(0, 5)}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_STYLES[status]}`}>
+                      {STATUS_LABELS[status]}
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">
                       €{b.provider_amount.toFixed(2)}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Accept / Decline for pending bookings */}
+                {isPending && (
+                  <div className="mt-4 pt-3 border-t border-yellow-200 dark:border-yellow-800 flex items-center justify-between gap-3 flex-wrap">
+                    <p className="text-xs text-muted-foreground">
+                      Accept to let the guest pay, or decline if you&apos;re unavailable.
+                    </p>
+                    <ProviderBookingActions bookingId={b.id} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -136,26 +136,42 @@ export default async function MyBookingsPage({
                   </p>
                 )}
 
-                {/* Pay now — only for pending, unpaid bookings */}
-                {b.status === "pending" && b.stripe_payment_status === "pending" && (
+                {/* Awaiting provider confirmation */}
+                {b.status === "pending" && (
                   <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between gap-3 flex-wrap">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse flex-shrink-0" />
+                      {t("pendingNote")}
+                    </p>
                     <CancelBookingButton bookingId={b.id} token={token} locale={locale} />
-                    <form action={createPaymentIntentAction} className="flex-shrink-0">
-                      <input type="hidden" name="locale" value={locale} />
-                      <input type="hidden" name="token" value={token} />
-                      <input type="hidden" name="booking_id" value={b.id} />
-                      <button
-                        type="submit"
-                        className="flex items-center gap-2 text-sm font-medium bg-primary hover:bg-primary/90 text-primary-foreground py-2 px-4 rounded-xl transition-colors shadow-warm-sm"
-                      >
-                        {t("payToConfirm", { amount: b.total_amount.toFixed(2) })}
-                      </button>
-                    </form>
                   </div>
                 )}
 
-                {/* Cancel-only row for confirmed bookings (not yet started) */}
-                {b.status === "confirmed" && (
+                {/* Provider accepted — guest can now pay */}
+                {b.status === "confirmed" && b.stripe_payment_status === "pending" && (
+                  <div className="mt-4 pt-4 border-t border-border/50">
+                    <p className="text-xs text-muted-foreground mb-3">
+                      {t("acceptedNote")}
+                    </p>
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <CancelBookingButton bookingId={b.id} token={token} locale={locale} />
+                      <form action={createPaymentIntentAction} className="flex-shrink-0">
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="token" value={token} />
+                        <input type="hidden" name="booking_id" value={b.id} />
+                        <button
+                          type="submit"
+                          className="flex items-center gap-2 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground py-2.5 px-5 rounded-xl transition-colors shadow-warm-sm"
+                        >
+                          {t("payToConfirm", { amount: b.total_amount.toFixed(2) })}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
+                {/* Already paid — just allow cancel before start */}
+                {b.status === "confirmed" && b.stripe_payment_status === "paid" && (
                   <div className="mt-4 pt-4 border-t border-border/50">
                     <CancelBookingButton bookingId={b.id} token={token} locale={locale} />
                   </div>

@@ -7,16 +7,46 @@
     "servicesLabel": "Services Disponibles"
   },
   "services": {
-    "chef":      { "label": "Chef Privé",         "description": "Expériences culinaires en villa" },
-    "cleaning":  { "label": "Ménage",             "description": "Nettoyage complet de la villa" },
-    "groceries": { "label": "Courses",            "description": "Produits frais livrés à domicile" },
-    "yoga":      { "label": "Yoga & Fitness",     "description": "Séances d'entraînement personnel" },
-    "massage":   { "label": "Massage",            "description": "Soins spa en villa" },
-    "transfer":  { "label": "Transferts",         "description": "Transport aéroport et ville" },
-    "tours":     { "label": "Visites Guidées",    "description": "Découverte guidée de Malaga" },
-    "wine":      { "label": "Vins & Boissons",    "description": "Sélection de vins curatée" },
-    "childcare": { "label": "Garde d'Enfants",    "description": "Baby-sitting professionnel" },
-    "laundry":   { "label": "Blanchisserie",      "description": "Lavage, séchage et repassage" }
+    "chef": {
+      "label": "Chef Privé",
+      "description": "Expériences culinaires en villa"
+    },
+    "cleaning": {
+      "label": "Ménage",
+      "description": "Nettoyage complet de la villa"
+    },
+    "groceries": {
+      "label": "Courses",
+      "description": "Produits frais livrés à domicile"
+    },
+    "yoga": {
+      "label": "Yoga & Fitness",
+      "description": "Séances d'entraînement personnel"
+    },
+    "massage": {
+      "label": "Massage",
+      "description": "Soins spa en villa"
+    },
+    "transfer": {
+      "label": "Transferts",
+      "description": "Transport aéroport et ville"
+    },
+    "tours": {
+      "label": "Visites Guidées",
+      "description": "Découverte guidée de Malaga"
+    },
+    "wine": {
+      "label": "Vins & Boissons",
+      "description": "Sélection de vins curatée"
+    },
+    "childcare": {
+      "label": "Garde d'Enfants",
+      "description": "Baby-sitting professionnel"
+    },
+    "laundry": {
+      "label": "Blanchisserie",
+      "description": "Lavage, séchage et repassage"
+    }
   },
   "guest": {
     "access": {
@@ -72,7 +102,9 @@
         "in_progress": "En cours",
         "completed": "Terminée",
         "cancelled": "Annulée"
-      }
+      },
+      "pendingNote": "En attente de confirmation du prestataire.",
+      "acceptedNote": "Votre demande a été acceptée. Finalisez le paiement pour confirmer."
     },
     "payment": {
       "title": "Finaliser le Paiement",

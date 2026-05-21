@@ -7,16 +7,46 @@
     "servicesLabel": "Servizi Disponibili"
   },
   "services": {
-    "chef":      { "label": "Chef Privato",        "description": "Esperienze culinarie in villa" },
-    "cleaning":  { "label": "Pulizie",             "description": "Pulizia e riordino completo" },
-    "groceries": { "label": "Spesa",               "description": "Prodotti freschi consegnati" },
-    "yoga":      { "label": "Yoga & Fitness",      "description": "Sessioni di allenamento personale" },
-    "massage":   { "label": "Massaggi",            "description": "Trattamenti spa in villa" },
-    "transfer":  { "label": "Trasferimenti",       "description": "Trasporto aeroporto e città" },
-    "tours":     { "label": "Tour",                "description": "Esperienze guidate a Malaga" },
-    "wine":      { "label": "Vini & Bevande",      "description": "Selezione curata di vini" },
-    "childcare": { "label": "Babysitting",         "description": "Babysitting professionale" },
-    "laundry":   { "label": "Lavanderia",          "description": "Lavaggio, asciugatura e piega" }
+    "chef": {
+      "label": "Chef Privato",
+      "description": "Esperienze culinarie in villa"
+    },
+    "cleaning": {
+      "label": "Pulizie",
+      "description": "Pulizia e riordino completo"
+    },
+    "groceries": {
+      "label": "Spesa",
+      "description": "Prodotti freschi consegnati"
+    },
+    "yoga": {
+      "label": "Yoga & Fitness",
+      "description": "Sessioni di allenamento personale"
+    },
+    "massage": {
+      "label": "Massaggi",
+      "description": "Trattamenti spa in villa"
+    },
+    "transfer": {
+      "label": "Trasferimenti",
+      "description": "Trasporto aeroporto e città"
+    },
+    "tours": {
+      "label": "Tour",
+      "description": "Esperienze guidate a Malaga"
+    },
+    "wine": {
+      "label": "Vini & Bevande",
+      "description": "Selezione curata di vini"
+    },
+    "childcare": {
+      "label": "Babysitting",
+      "description": "Babysitting professionale"
+    },
+    "laundry": {
+      "label": "Lavanderia",
+      "description": "Lavaggio, asciugatura e piega"
+    }
   },
   "guest": {
     "access": {
@@ -72,7 +102,9 @@
         "in_progress": "In corso",
         "completed": "Completata",
         "cancelled": "Annullata"
-      }
+      },
+      "pendingNote": "In attesa di conferma dal fornitore.",
+      "acceptedNote": "La tua richiesta è stata accettata. Completa il pagamento per confermare."
     },
     "payment": {
       "title": "Completa il Pagamento",

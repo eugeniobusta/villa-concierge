@@ -7,16 +7,46 @@
     "servicesLabel": "Available Services"
   },
   "services": {
-    "chef":      { "label": "Private Chef",   "description": "In-villa dining experiences" },
-    "cleaning":  { "label": "Housekeeping",   "description": "Full villa cleaning & tidying" },
-    "groceries": { "label": "Groceries",      "description": "Fresh produce delivered" },
-    "yoga":      { "label": "Yoga & Fitness", "description": "Personal training sessions" },
-    "massage":   { "label": "Massage",        "description": "In-villa spa treatments" },
-    "transfer":  { "label": "Transfers",      "description": "Airport & city transport" },
-    "tours":     { "label": "Tours",          "description": "Guided Malaga experiences" },
-    "wine":      { "label": "Wine & Drinks",  "description": "Curated wine selection" },
-    "childcare": { "label": "Childcare",      "description": "Professional babysitting" },
-    "laundry":   { "label": "Laundry",        "description": "Wash, dry & fold service" }
+    "chef": {
+      "label": "Private Chef",
+      "description": "In-villa dining experiences"
+    },
+    "cleaning": {
+      "label": "Housekeeping",
+      "description": "Full villa cleaning & tidying"
+    },
+    "groceries": {
+      "label": "Groceries",
+      "description": "Fresh produce delivered"
+    },
+    "yoga": {
+      "label": "Yoga & Fitness",
+      "description": "Personal training sessions"
+    },
+    "massage": {
+      "label": "Massage",
+      "description": "In-villa spa treatments"
+    },
+    "transfer": {
+      "label": "Transfers",
+      "description": "Airport & city transport"
+    },
+    "tours": {
+      "label": "Tours",
+      "description": "Guided Malaga experiences"
+    },
+    "wine": {
+      "label": "Wine & Drinks",
+      "description": "Curated wine selection"
+    },
+    "childcare": {
+      "label": "Childcare",
+      "description": "Professional babysitting"
+    },
+    "laundry": {
+      "label": "Laundry",
+      "description": "Wash, dry & fold service"
+    }
   },
   "guest": {
     "access": {
@@ -72,7 +102,9 @@
         "in_progress": "In Progress",
         "completed": "Completed",
         "cancelled": "Cancelled"
-      }
+      },
+      "pendingNote": "Awaiting confirmation from the provider.",
+      "acceptedNote": "Your request was accepted. Complete payment to secure your booking."
     },
     "payment": {
       "title": "Complete Payment",

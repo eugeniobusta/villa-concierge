@@ -32,6 +32,9 @@ export async function createPaymentIntentAction(formData: FormData) {
   if (booking.stripe_payment_status === "paid") {
     redirect(`/${locale}/stay/${token}/bookings`);
   }
+  if (booking.status !== "confirmed") {
+    redirect(errUrl("This booking hasn't been accepted by the provider yet. You can pay once they confirm."));
+  }
 
   // Convert euros to cents — Stripe always works in smallest currency unit
   const amountCents = Math.round(booking.total_amount * 100);

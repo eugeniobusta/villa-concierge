@@ -7,16 +7,46 @@
     "servicesLabel": "Verfügbare Services"
   },
   "services": {
-    "chef":      { "label": "Privatkoch",          "description": "Kulinarische Erlebnisse in der Villa" },
-    "cleaning":  { "label": "Housekeeping",        "description": "Vollständige Villa-Reinigung" },
-    "groceries": { "label": "Einkauf",             "description": "Frische Produkte geliefert" },
-    "yoga":      { "label": "Yoga & Fitness",      "description": "Personal-Training-Sessionen" },
-    "massage":   { "label": "Massage",             "description": "Spa-Behandlungen in der Villa" },
-    "transfer":  { "label": "Transfers",           "description": "Flughafen- und Stadttransport" },
-    "tours":     { "label": "Touren",              "description": "Geführte Erlebnisse in Malaga" },
-    "wine":      { "label": "Wein & Getränke",     "description": "Kuratierte Weinauswahl" },
-    "childcare": { "label": "Kinderbetreuung",     "description": "Professionelles Babysitting" },
-    "laundry":   { "label": "Wäscheservice",       "description": "Waschen, Trocknen & Falten" }
+    "chef": {
+      "label": "Privatkoch",
+      "description": "Kulinarische Erlebnisse in der Villa"
+    },
+    "cleaning": {
+      "label": "Housekeeping",
+      "description": "Vollständige Villa-Reinigung"
+    },
+    "groceries": {
+      "label": "Einkauf",
+      "description": "Frische Produkte geliefert"
+    },
+    "yoga": {
+      "label": "Yoga & Fitness",
+      "description": "Personal-Training-Sessionen"
+    },
+    "massage": {
+      "label": "Massage",
+      "description": "Spa-Behandlungen in der Villa"
+    },
+    "transfer": {
+      "label": "Transfers",
+      "description": "Flughafen- und Stadttransport"
+    },
+    "tours": {
+      "label": "Touren",
+      "description": "Geführte Erlebnisse in Malaga"
+    },
+    "wine": {
+      "label": "Wein & Getränke",
+      "description": "Kuratierte Weinauswahl"
+    },
+    "childcare": {
+      "label": "Kinderbetreuung",
+      "description": "Professionelles Babysitting"
+    },
+    "laundry": {
+      "label": "Wäscheservice",
+      "description": "Waschen, Trocknen & Falten"
+    }
   },
   "guest": {
     "access": {
@@ -72,7 +102,9 @@
         "in_progress": "Läuft",
         "completed": "Abgeschlossen",
         "cancelled": "Storniert"
-      }
+      },
+      "pendingNote": "Warte auf Bestätigung des Anbieters.",
+      "acceptedNote": "Ihre Anfrage wurde angenommen. Schließen Sie die Zahlung ab."
     },
     "payment": {
       "title": "Zahlung abschließen",

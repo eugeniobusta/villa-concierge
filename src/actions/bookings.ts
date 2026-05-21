@@ -10,8 +10,11 @@ import type { BookingStatus } from "@/types/database";
 import {
   sendBookingReceivedEmail,
   sendBookingConfirmedEmail,
+  sendBookingAcceptedEmail,
+  sendBookingDeclinedEmail,
   sendAdminNewBookingEmail,
 } from "@/lib/emails";
+import { getProviderSession } from "@/lib/provider-session";
 
 type ActionState = { error: string } | null;
 
@@ -231,4 +234,99 @@ export async function updateBookingStatusAction(
 
   revalidatePath("/[locale]/admin/bookings", "page");
   return null;
+}
+
+// ── Shared helper: fetch booking details needed for provider emails ──────────
+async function getBookingEmailData(bookingId: string) {
+  const db = createAdminClient();
+  const { data: booking } = await db
+    .from("bookings")
+    .select("guest_session_id, provider_service_id, booking_date, start_time, total_amount")
+    .eq("id", bookingId)
+    .single();
+  if (!booking) return null;
+
+  const [{ data: session }, { data: ps }] = await Promise.all([
+    db.from("guest_sessions").select("guest_name, guest_email, access_token").eq("id", booking.guest_session_id).single(),
+    db.from("provider_services").select("service_id").eq("id", booking.provider_service_id).single(),
+  ]);
+  if (!session?.guest_email || !ps) return null;
+
+  const { data: service } = await db.from("services").select("name").eq("id", ps.service_id).single();
+  const serviceName = service ? (service.name as Record<string, string>).en : "Service";
+
+  return {
+    guestName:   session.guest_name,
+    guestEmail:  session.guest_email,
+    serviceName,
+    bookingDate: booking.booking_date,
+    startTime:   booking.start_time,
+    totalAmount: booking.total_amount,
+    accessToken: session.access_token,
+  };
+}
+
+export async function providerAcceptBookingAction(bookingId: string): Promise<void> {
+  const provider = await getProviderSession();
+  if (!provider) return;
+
+  const db = createAdminClient();
+
+  // Verify this booking belongs to this provider and is still pending
+  const { data: booking } = await db
+    .from("bookings")
+    .select("id, status, provider_service_id")
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking || booking.status !== "pending") return;
+
+  // Confirm the provider_service belongs to this provider
+  const { data: ps } = await db
+    .from("provider_services")
+    .select("provider_id")
+    .eq("id", booking.provider_service_id)
+    .eq("provider_id", provider.id)
+    .single();
+
+  if (!ps) return; // not their booking
+
+  await db.from("bookings").update({ status: "confirmed" }).eq("id", bookingId);
+
+  revalidatePath("/[locale]/provider/bookings", "page");
+
+  // Notify guest they can now pay
+  const emailData = await getBookingEmailData(bookingId);
+  if (emailData) await sendBookingAcceptedEmail(emailData);
+}
+
+export async function providerDeclineBookingAction(bookingId: string): Promise<void> {
+  const provider = await getProviderSession();
+  if (!provider) return;
+
+  const db = createAdminClient();
+
+  const { data: booking } = await db
+    .from("bookings")
+    .select("id, status, provider_service_id")
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking || booking.status !== "pending") return;
+
+  const { data: ps } = await db
+    .from("provider_services")
+    .select("provider_id")
+    .eq("id", booking.provider_service_id)
+    .eq("provider_id", provider.id)
+    .single();
+
+  if (!ps) return;
+
+  await db.from("bookings").update({ status: "cancelled" }).eq("id", bookingId);
+
+  revalidatePath("/[locale]/provider/bookings", "page");
+
+  const emailData = await getBookingEmailData(bookingId);
+  if (emailData) await sendBookingDeclinedEmail(emailData);
 }
