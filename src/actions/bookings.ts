@@ -154,13 +154,50 @@ export async function cancelBookingAction(formData: FormData): Promise<void> {
 
   const db = createAdminClient();
 
-  // Only cancel if booking belongs to this session and hasn't started/completed
+  // Fetch the booking first so we know its payment state
+  const { data: booking } = await db
+    .from("bookings")
+    .select("id, status, stripe_payment_status, stripe_payment_intent_id, guest_session_id")
+    .eq("id", bookingId)
+    .eq("guest_session_id", session.id)
+    .single();
+
+  if (!booking) redirect(`/${locale}/stay/${token}/bookings`);
+  if (!["pending", "confirmed"].includes(booking!.status)) redirect(`/${locale}/stay/${token}/bookings`);
+
+  // If the card was already captured, issue a full refund before cancelling
+  if (
+    booking!.status === "confirmed" &&
+    booking!.stripe_payment_status === "paid" &&
+    booking!.stripe_payment_intent_id
+  ) {
+    try {
+      await stripe.refunds.create({
+        payment_intent: booking!.stripe_payment_intent_id,
+        reason: "requested_by_customer",
+      });
+    } catch (err) {
+      // Log but still cancel — admin can process the refund manually in Stripe dashboard
+      console.error("[stripe] Refund failed for booking", bookingId, err);
+    }
+  }
+
+  // If the intent was only authorized (not yet captured), cancel the hold
+  if (
+    booking!.status === "pending" &&
+    booking!.stripe_payment_intent_id
+  ) {
+    try {
+      await stripe.paymentIntents.cancel(booking!.stripe_payment_intent_id);
+    } catch {
+      // Already cancelled or expired — fine to ignore
+    }
+  }
+
   await db
     .from("bookings")
     .update({ status: "cancelled", cancelled_by: "guest" })
-    .eq("id", bookingId)
-    .eq("guest_session_id", session.id)
-    .in("status", ["pending", "confirmed"]);
+    .eq("id", bookingId);
 
   redirect(`/${locale}/stay/${token}/bookings`);
 }

@@ -123,7 +123,11 @@ export default async function PrivacyPage({
 
       </div>
 
-      <div className="mt-12 pt-8 border-t border-border">
+      <div className="mt-12 pt-8 border-t border-border flex items-center gap-4">
+        <Link href={`/${locale}/terms`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          Terms of Service
+        </Link>
+        <span className="text-muted-foreground/30 text-xs">·</span>
         <p className="text-xs text-muted-foreground">
           Sanchamar · Malaga, Spain · <a href="mailto:concierge@sanchamar.com" className="hover:text-foreground transition-colors">concierge@sanchamar.com</a>
         </p>

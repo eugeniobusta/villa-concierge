@@ -322,6 +322,11 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             Privacy Policy
           </Link>
           <span className="text-muted-foreground/20 text-xs">·</span>
+          <Link href={`/${locale}/terms`}
+            className="text-[11px] text-muted-foreground/50 hover:text-muted-foreground/80 transition-colors">
+            Terms of Service
+          </Link>
+          <span className="text-muted-foreground/20 text-xs">·</span>
           <Link href={`/${locale}/admin/login`}
             className="text-[11px] text-muted-foreground/35 hover:text-muted-foreground/70 transition-colors">
             Admin Portal ↗
