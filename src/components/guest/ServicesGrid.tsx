@@ -30,10 +30,11 @@ const ICON_COLORS: Record<string, string> = {
 };
 
 interface Props {
-  categories: ServiceCategory[];
-  services: Service[];
-  locale: string;
-  token: string;
+  categories:        ServiceCategory[];
+  services:          Service[];
+  coveredServiceIds: Set<string>;
+  locale:            string;
+  token:             string;
 }
 
 function fmtAmt(price: number): string {
@@ -44,7 +45,7 @@ function pick(obj: Record<string, string>, locale: string): string {
   return obj[locale] ?? obj.en ?? "";
 }
 
-export default function ServicesGrid({ categories, services, locale, token }: Props) {
+export default function ServicesGrid({ categories, services, coveredServiceIds, locale, token }: Props) {
   const t    = useTranslations("guest.home");
   const l    = useLocale();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -92,13 +93,35 @@ export default function ServicesGrid({ categories, services, locale, token }: Pr
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
           {filtered.map((svc) => {
-            const catIcon  = categories.find((c) => c.id === svc.category_id)?.icon ?? "";
-            const Icon     = ICON_MAP[catIcon] ?? HelpCircle;
+            const catIcon   = categories.find((c) => c.id === svc.category_id)?.icon ?? "";
+            const Icon      = ICON_MAP[catIcon] ?? HelpCircle;
             const iconColor = ICON_COLORS[catIcon] ?? "bg-muted text-muted-foreground";
-            const name     = pick(svc.name as Record<string, string>, l);
-            const desc     = svc.description
+            const name      = pick(svc.name as Record<string, string>, l);
+            const desc      = svc.description
               ? pick(svc.description as Record<string, string>, l)
               : null;
+            const hasProvider = coveredServiceIds.has(svc.id);
+
+            // Services with no active provider are shown dimmed and non-interactive
+            if (!hasProvider) {
+              return (
+                <div
+                  key={svc.id}
+                  className="relative bg-card border border-border rounded-2xl p-5 shadow-warm-sm overflow-hidden opacity-45 grayscale cursor-default select-none"
+                >
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${iconColor}`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <p className="font-semibold text-foreground text-sm leading-tight mb-1">{name}</p>
+                  {desc && (
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-3 line-clamp-2">{desc}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground/60">
+                    {t("unavailable") || "Not available"}
+                  </p>
+                </div>
+              );
+            }
 
             return (
               <Link

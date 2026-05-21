@@ -21,7 +21,7 @@ export default async function GuestHomePage({
   if (!session) notFound();
 
   const db = createAdminClient();
-  const [{ data: categories }, { data: services }, { count: bookingCount }] = await Promise.all([
+  const [{ data: categories }, { data: services }, { count: bookingCount }, { data: availablePs }, { data: activeProviders }] = await Promise.all([
     db.from("service_categories").select("*").eq("is_active", true).order("sort_order"),
     db.from("services").select("*").eq("is_active", true).order("sort_order"),
     db
@@ -29,7 +29,16 @@ export default async function GuestHomePage({
       .select("*", { count: "exact", head: true })
       .eq("guest_session_id", session.id)
       .neq("status", "cancelled"),
+    db.from("provider_services").select("service_id, provider_id").eq("is_available", true),
+    db.from("providers").select("id").eq("is_active", true),
   ]);
+
+  const activeProviderSet  = new Set((activeProviders ?? []).map((p) => p.id));
+  const coveredServiceIds  = new Set(
+    (availablePs ?? [])
+      .filter((ps) => activeProviderSet.has(ps.provider_id))
+      .map((ps) => ps.service_id)
+  );
 
   return (
     <div>
@@ -92,6 +101,7 @@ export default async function GuestHomePage({
         <ServicesGrid
           categories={categories ?? []}
           services={services ?? []}
+          coveredServiceIds={coveredServiceIds}
           locale={locale}
           token={token}
         />
