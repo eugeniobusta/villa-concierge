@@ -21,7 +21,23 @@ export async function addSlotAction(formData: FormData): Promise<SlotResult> {
     return { error: "End time must be after start time." };
   }
 
-  const { error } = await createAdminClient()
+  const db = createAdminClient();
+
+  // Reject if an existing slot overlaps this new one
+  const { count } = await db
+    .from("availability_slots")
+    .select("id", { count: "exact", head: true })
+    .eq("provider_id", provider.id)
+    .eq("date", date)
+    .eq("is_blocked", false)
+    .lt("start_time", endTime)
+    .gt("end_time", startTime);
+
+  if ((count ?? 0) > 0) {
+    return { error: "That time range overlaps an existing slot on this day." };
+  }
+
+  const { error } = await db
     .from("availability_slots")
     .insert({
       provider_id: provider.id,
@@ -41,14 +57,39 @@ export async function bulkAddSlotsAction(
   dates: string[],
   startTime: string,
   endTime: string
-): Promise<SlotResult> {
+): Promise<{ error: string } | { skipped: string[] } | null> {
   const provider = await getProviderSession();
   if (!provider) return { error: "Not authenticated as a provider." };
   if (!dates.length) return { error: "Select at least one day." };
   if (!startTime || !endTime) return { error: "Start and end time are required." };
   if (endTime <= startTime) return { error: "End time must be after start time." };
 
-  const rows = dates.map((date) => ({
+  const db = createAdminClient();
+
+  // Check each date for overlapping slots
+  // Two intervals overlap when: existing.start < newEnd AND existing.end > newStart
+  const overlapChecks = await Promise.all(
+    dates.map(async (date) => {
+      const { count } = await db
+        .from("availability_slots")
+        .select("id", { count: "exact", head: true })
+        .eq("provider_id", provider.id)
+        .eq("date", date)
+        .eq("is_blocked", false)
+        .lt("start_time", endTime)
+        .gt("end_time", startTime);
+      return { date, conflict: (count ?? 0) > 0 };
+    })
+  );
+
+  const clearDates   = overlapChecks.filter((r) => !r.conflict).map((r) => r.date);
+  const skippedDates = overlapChecks.filter((r) =>  r.conflict).map((r) => r.date);
+
+  if (clearDates.length === 0) {
+    return { error: "All selected days already have an overlapping slot. Remove the existing slot first." };
+  }
+
+  const rows = clearDates.map((date) => ({
     provider_id: provider.id,
     date,
     start_time:  startTime,
@@ -56,14 +97,11 @@ export async function bulkAddSlotsAction(
     is_blocked:  false,
   }));
 
-  const { error } = await createAdminClient()
-    .from("availability_slots")
-    .insert(rows);
-
+  const { error } = await db.from("availability_slots").insert(rows);
   if (error) return { error: error.message };
 
   revalidatePath("/provider/availability");
-  return null;
+  return skippedDates.length > 0 ? { skipped: skippedDates } : null;
 }
 
 export async function deleteSlotAction(slotId: string): Promise<void> {

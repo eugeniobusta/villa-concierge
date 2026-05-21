@@ -65,10 +65,46 @@ export default function BookingForm({
     : stayDates;
 
   const isHourly = priceUnit === "per_hour";
-  const total    = isHourly ? unitPrice * duration : unitPrice;
 
+  // For per_hour: use the slot as an available window; guest picks their start time within it
+  const hourlyWindow = isHourly && slotsForDate.length > 0 ? slotsForDate[0] : null;
+
+  function toMins(t: string) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+  function fromMins(mins: number) {
+    return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+  }
+
+  const winStartStr  = hourlyWindow ? hourlyWindow.start_time.slice(0, 5) : "09:00";
+  const winEndStr    = hourlyWindow ? hourlyWindow.end_time.slice(0, 5)   : "17:00";
+  const winStartMins = hourlyWindow ? toMins(winStartStr) : 0;
+  const winEndMins   = hourlyWindow ? toMins(winEndStr)   : 0;
+
+  // Latest valid start time = window end − duration
+  const maxStartMins = winEndMins - duration * 60;
+  const maxStartStr  = hourlyWindow ? fromMins(Math.max(winStartMins, maxStartMins)) : winEndStr;
+
+  // Auto-calculated end for the booking
+  const bookingEndStr = selectedStart
+    ? fromMins(toMins(selectedStart) + duration * 60)
+    : null;
+
+  // How many hours can be booked from the chosen start (cap at service max)
+  const availableFromStart = selectedStart
+    ? Math.floor((winEndMins - toMins(selectedStart)) / 60)
+    : Math.floor((winEndMins - winStartMins) / 60);
+  const effectiveMaxDuration = Math.min(
+    maxDuration ?? availableFromStart,
+    availableFromStart
+  );
+
+  const total = isHourly ? unitPrice * duration : unitPrice;
+
+  const effectiveStart = selectedStart ?? (isHourly && hourlyWindow ? winStartStr : null);
   const canSubmit = selectedPsId && selectedDate &&
-    (priceUnit === "flat" || priceUnit === "per_item" || selectedStart);
+    (priceUnit === "flat" || priceUnit === "per_item" || effectiveStart);
 
   function fmtTime(time: string) {
     const [h, m] = time.split(":");
@@ -96,7 +132,7 @@ export default function BookingForm({
       <input type="hidden" name="token" value={token} />
       <input type="hidden" name="provider_service_id" value={selectedPsId ?? ""} />
       <input type="hidden" name="booking_date" value={selectedDate ?? ""} />
-      <input type="hidden" name="start_time" value={selectedStart ?? ""} />
+      <input type="hidden" name="start_time" value={effectiveStart ?? ""} />
       <input type="hidden" name="duration_hours" value={isHourly ? duration : 0} />
 
       {/* Step 1: Provider */}
@@ -164,35 +200,92 @@ export default function BookingForm({
       )}
 
       {/* Step 3: Time */}
-      {selectedDate && slotsForDate.length > 0 && (
+      {selectedDate && (
         <div>
-          <p className="text-sm font-medium text-foreground mb-3">{t("chooseTime")}</p>
-          <div className="flex flex-wrap gap-2">
-            {slotsForDate.map((slot) => {
-              const past = isPastSlot(slot.start_time);
-              return (
-                <button
-                  key={slot.id}
-                  type="button"
-                  onClick={() => { if (!past) setSelectedStart(slot.start_time); }}
-                  disabled={past}
-                  className={dateButtonClass(selectedStart === slot.start_time, past)}
-                >
-                  {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
-                </button>
-              );
-            })}
-          </div>
+          {isHourly ? (
+            /* ── Hourly: free start-time picker within provider's window ── */
+            hourlyWindow ? (
+              <div className="space-y-4">
+                {/* Available window hint */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 bg-muted/60 border border-border px-3 py-1.5 rounded-full">
+                    {t("availableWindow") || "Provider available"}
+                    {": "}
+                    <span className="font-semibold text-foreground">
+                      {fmtTime(hourlyWindow.start_time)} – {fmtTime(hourlyWindow.end_time)}
+                    </span>
+                  </span>
+                </div>
+
+                {/* Start time picker */}
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-2">{t("chooseTime")}</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div>
+                      <label className="text-xs text-muted-foreground block mb-1.5">Start time</label>
+                      <input
+                        type="time"
+                        value={selectedStart ?? winStartStr}
+                        min={selectedDate === today ? (nowMinutes > winStartMins ? fromMins(nowMinutes + 1) : winStartStr) : winStartStr}
+                        max={maxStartStr}
+                        onChange={(e) => {
+                          setSelectedStart(e.target.value);
+                          // If current duration now exceeds the window, shrink it
+                          const newMaxDur = Math.floor((winEndMins - toMins(e.target.value)) / 60);
+                          if (duration > newMaxDur) setDuration(Math.max(minDuration ?? 1, newMaxDur));
+                        }}
+                        className="border border-border rounded-xl px-3 py-2.5 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                      />
+                    </div>
+
+                    {bookingEndStr && (
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1.5">Ends at</p>
+                        <p className="text-sm font-semibold text-foreground bg-muted/50 rounded-xl px-3 py-2.5 border border-border">
+                          {fmtTime(bookingEndStr + ":00")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              selectedDate && <p className="text-sm text-muted-foreground">{t("noAvailability")}</p>
+            )
+          ) : (
+            /* ── Non-hourly: pick a provider-defined slot ── */
+            slotsForDate.length > 0 ? (
+              <div>
+                <p className="text-sm font-medium text-foreground mb-3">{t("chooseTime")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {slotsForDate.map((slot) => {
+                    const past = isPastSlot(slot.start_time);
+                    return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => { if (!past) setSelectedStart(slot.start_time); }}
+                        disabled={past}
+                        className={dateButtonClass(selectedStart === slot.start_time, past)}
+                      >
+                        {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null
+          )}
         </div>
       )}
 
-      {/* Step 4: Duration */}
-      {isHourly && selectedDate && (
+      {/* Step 4: Duration (per_hour only) */}
+      {isHourly && selectedDate && (selectedStart ?? winStartStr) && (
         <div>
           <p className="text-sm font-medium text-foreground mb-3">{t("duration")}</p>
           <div className="flex flex-wrap gap-2">
             {Array.from(
-              { length: (maxDuration ?? 8) - (minDuration ?? 1) + 1 },
+              { length: Math.max(0, effectiveMaxDuration - (minDuration ?? 1) + 1) },
               (_, i) => (minDuration ?? 1) + i
             ).map((h) => (
               <button
@@ -232,7 +325,9 @@ export default function BookingForm({
               <p className="text-xs text-muted-foreground mt-0.5">
                 {selected?.provider.name}
                 {selectedDate && ` · ${formatDate(selectedDate, { locale })}`}
-                {isHourly && ` · ${duration}h`}
+                {isHourly && effectiveStart && bookingEndStr
+                  ? ` · ${fmtTime(effectiveStart + ":00")} – ${fmtTime(bookingEndStr + ":00")} (${duration}h)`
+                  : isHourly ? ` · ${duration}h` : ""}
               </p>
             </div>
             <p className="text-xl font-semibold text-foreground">€{total.toFixed(2)}</p>

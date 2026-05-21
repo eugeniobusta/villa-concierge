@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { bulkAddSlotsAction, deleteSlotAction } from "@/actions/availability";
-import { Trash2, Loader2, CalendarCheck } from "lucide-react";
+import { Trash2, Loader2, CalendarCheck, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Slot {
@@ -39,6 +39,7 @@ export default function AvailabilityManager({ slots, dates }: Props) {
   const [endTime,   setEndTime]         = useState("17:00");
   const [selected,  setSelected]        = useState<Set<string>>(new Set());
   const [error,     setError]           = useState<string | null>(null);
+  const [skipped,   setSkipped]         = useState<string[]>([]);
   const [deletingId, setDeletingId]     = useState<string | null>(null);
   const [isPending, startTransition]    = useTransition();
 
@@ -81,14 +82,19 @@ export default function AvailabilityManager({ slots, dates }: Props) {
   function handleAdd() {
     if (!selected.size) return;
     setError(null);
+    setSkipped([]);
     startTransition(async () => {
       const result = await bulkAddSlotsAction(
         [...selected].sort(),
         startTime,
         endTime,
       );
-      if (result?.error) setError(result.error);
-      else               setSelected(new Set());
+      if (result && "error" in result) {
+        setError(result.error);
+      } else {
+        setSelected(new Set());
+        if (result && "skipped" in result) setSkipped(result.skipped);
+      }
     });
   }
 
@@ -107,6 +113,17 @@ export default function AvailabilityManager({ slots, dates }: Props) {
 
   return (
     <div className="space-y-6">
+
+      {/* ══ Explanation note ══════════════════════════════════════════════════ */}
+      <div className="flex gap-3 bg-primary/6 border border-primary/20 rounded-2xl px-4 py-3">
+        <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-foreground leading-relaxed">
+          Set the <span className="font-semibold">longest window</span> you are available each day — for example{" "}
+          <span className="font-medium">09:00 – 17:00</span>. For hourly services (massage, childcare…) the guest will
+          choose their own start time and how many hours they need within your window. You never need to create
+          multiple short slots.
+        </p>
+      </div>
 
       {/* ══ Bulk-add card ══════════════════════════════════════════════════════ */}
       <div className="bg-card rounded-2xl border border-border p-5 shadow-warm-sm">
@@ -216,6 +233,13 @@ export default function AvailabilityManager({ slots, dates }: Props) {
           <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 px-3 py-2 rounded-xl mb-3">
             {error}
           </p>
+        )}
+
+        {skipped.length > 0 && (
+          <div className="text-sm bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 px-3 py-2 rounded-xl mb-3">
+            <span className="font-medium">Skipped {skipped.length} day{skipped.length > 1 ? "s" : ""} with overlapping slots:</span>{" "}
+            {skipped.map((d) => fmtDate(d)).join(", ")}
+          </div>
         )}
 
         <button
