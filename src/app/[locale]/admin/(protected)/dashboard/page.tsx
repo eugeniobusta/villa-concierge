@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { RevenueChart } from "@/components/admin/RevenueChart";
 import type { DayRevenue } from "@/components/admin/RevenueChart";
+import RealtimeBookingWatcher from "@/components/admin/RealtimeBookingWatcher";
 
 async function getStats() {
   const db = createAdminClient();
@@ -131,11 +132,14 @@ export default async function DashboardPage({
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Sanchamar overview</p>
         </div>
-        <Link href={`/${locale}/admin/stays/new`}>
-          <Button size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> New Stay
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <RealtimeBookingWatcher locale={locale} />
+          <Link href={`/${locale}/admin/stays/new`}>
+            <Button size="sm" className="gap-1.5">
+              <Plus className="h-4 w-4" /> New Stay
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stat cards */}
