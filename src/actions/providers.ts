@@ -8,11 +8,18 @@ import { revalidatePath } from "next/cache";
 type ActionState = { error: string } | null;
 
 async function verifyAdmin(): Promise<boolean> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const adminEmails = (process.env.ADMIN_EMAIL ?? "")
-    .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-  return !!(user && adminEmails.includes(user.email?.toLowerCase() ?? ""));
+  try {
+    const supabase = await createClient();
+    // getSession() reads from the cookie — no network call, always works in server actions.
+    // The layout already validated the session with getUser() when the page loaded.
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.email) return false;
+    const adminEmails = (process.env.ADMIN_EMAIL ?? "")
+      .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    return adminEmails.includes(session.user.email.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 
 export async function createProviderAction(

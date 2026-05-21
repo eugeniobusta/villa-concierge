@@ -210,16 +210,17 @@ export async function updateBookingStatusAction(
   bookingId: string,
   newStatus: BookingStatus
 ): Promise<{ error?: string } | null> {
-  // Verify the caller is a logged-in admin
+  // Verify the caller is a logged-in admin using getSession() (reads from cookie,
+  // no network call — reliable in server action context on Vercel)
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
 
   const adminEmails = (process.env.ADMIN_EMAIL ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
 
-  if (!user || !adminEmails.includes(user.email?.toLowerCase() ?? "")) {
+  if (!session?.user?.email || !adminEmails.includes(session.user.email.toLowerCase())) {
     return { error: "Unauthorized" };
   }
 

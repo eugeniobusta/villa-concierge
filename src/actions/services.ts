@@ -13,11 +13,16 @@ function slugify(name: string) {
 }
 
 async function verifyAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const adminEmails = (process.env.ADMIN_EMAIL ?? "")
-    .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-  return user && adminEmails.includes(user.email?.toLowerCase() ?? "");
+  try {
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.email) return false;
+    const adminEmails = (process.env.ADMIN_EMAIL ?? "")
+      .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    return adminEmails.includes(session.user.email.toLowerCase());
+  } catch {
+    return false;
+  }
 }
 
 function extractFields(formData: FormData) {
