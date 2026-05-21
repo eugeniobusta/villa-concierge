@@ -37,6 +37,35 @@ export async function addSlotAction(formData: FormData): Promise<SlotResult> {
   return null;
 }
 
+export async function bulkAddSlotsAction(
+  dates: string[],
+  startTime: string,
+  endTime: string
+): Promise<SlotResult> {
+  const provider = await getProviderSession();
+  if (!provider) return { error: "Not authenticated as a provider." };
+  if (!dates.length) return { error: "Select at least one day." };
+  if (!startTime || !endTime) return { error: "Start and end time are required." };
+  if (endTime <= startTime) return { error: "End time must be after start time." };
+
+  const rows = dates.map((date) => ({
+    provider_id: provider.id,
+    date,
+    start_time:  startTime,
+    end_time:    endTime,
+    is_blocked:  false,
+  }));
+
+  const { error } = await createAdminClient()
+    .from("availability_slots")
+    .insert(rows);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/provider/availability");
+  return null;
+}
+
 export async function deleteSlotAction(slotId: string): Promise<void> {
   const provider = await getProviderSession();
   if (!provider) return;

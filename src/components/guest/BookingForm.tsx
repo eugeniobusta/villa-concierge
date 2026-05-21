@@ -44,6 +44,17 @@ export default function BookingForm({
   const [selectedStart, setSelectedStart] = useState<string | null>(null);
   const [duration, setDuration]           = useState<number>(minDuration ?? 1);
 
+  // Client-side date/time guards — evaluated at render time on the guest's device
+  const today       = new Date().toISOString().split("T")[0];
+  const nowMinutes  = new Date().getHours() * 60 + new Date().getMinutes();
+
+  function isPastDate(d: string) { return d < today; }
+  function isPastSlot(startTime: string) {
+    if (selectedDate !== today) return false;
+    const [h, m] = startTime.split(":").map(Number);
+    return h * 60 + m <= nowMinutes; // grey out if start time ≤ now
+  }
+
   const selected       = providers.find((p) => p.providerServiceId === selectedPsId);
   const unitPrice      = selected?.customPrice ?? basePrice;
   const slotsForDate   = selected && selectedDate
@@ -70,11 +81,13 @@ export default function BookingForm({
     return bio[currentLocale] ?? bio.en ?? null;
   }
 
-  const dateButtonClass = (active: boolean) => cn(
+  const dateButtonClass = (active: boolean, disabled = false) => cn(
     "px-3 py-2 rounded-xl border text-sm transition-all",
-    active
-      ? "bg-foreground text-background border-foreground"
-      : "bg-card text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground"
+    disabled
+      ? "opacity-35 line-through cursor-not-allowed border-border text-muted-foreground"
+      : active
+        ? "bg-foreground text-background border-foreground"
+        : "bg-card text-muted-foreground border-border hover:border-foreground/40 hover:text-foreground"
   );
 
   return (
@@ -131,16 +144,20 @@ export default function BookingForm({
             <p className="text-sm text-muted-foreground">{t("noAvailability")}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {(datesWithSlots.length > 0 ? datesWithSlots : stayDates).map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => { setSelectedDate(d); setSelectedStart(null); }}
-                  className={dateButtonClass(selectedDate === d)}
-                >
-                  {formatDate(d, { locale })}
-                </button>
-              ))}
+              {(datesWithSlots.length > 0 ? datesWithSlots : stayDates).map((d) => {
+                const past = isPastDate(d);
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => { if (!past) { setSelectedDate(d); setSelectedStart(null); } }}
+                    disabled={past}
+                    className={dateButtonClass(selectedDate === d, past)}
+                  >
+                    {formatDate(d, { locale })}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -151,16 +168,20 @@ export default function BookingForm({
         <div>
           <p className="text-sm font-medium text-foreground mb-3">{t("chooseTime")}</p>
           <div className="flex flex-wrap gap-2">
-            {slotsForDate.map((slot) => (
-              <button
-                key={slot.id}
-                type="button"
-                onClick={() => setSelectedStart(slot.start_time)}
-                className={dateButtonClass(selectedStart === slot.start_time)}
-              >
-                {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
-              </button>
-            ))}
+            {slotsForDate.map((slot) => {
+              const past = isPastSlot(slot.start_time);
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => { if (!past) setSelectedStart(slot.start_time); }}
+                  disabled={past}
+                  className={dateButtonClass(selectedStart === slot.start_time, past)}
+                >
+                  {fmtTime(slot.start_time)} – {fmtTime(slot.end_time)}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

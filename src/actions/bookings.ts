@@ -37,6 +37,11 @@ export async function createBookingAction(
     return { error: "Please select a service, provider, date and time." };
   }
 
+  const todayServer = new Date().toISOString().split("T")[0];
+  if (bookingDate < todayServer) {
+    return { error: "Booking date cannot be in the past." };
+  }
+
   const db = createAdminClient();
 
   const { data: ps } = await db

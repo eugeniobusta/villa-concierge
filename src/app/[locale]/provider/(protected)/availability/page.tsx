@@ -28,8 +28,8 @@ export default async function AvailabilityPage() {
   return (
     <div className="p-4 md:p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-stone-900">Availability</h1>
-        <p className="text-sm text-stone-400 mt-0.5">
+        <h1 className="text-2xl font-semibold text-foreground">Availability</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Set the times you&apos;re available to take bookings over the next 3 weeks.
         </p>
       </div>
