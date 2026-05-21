@@ -16,13 +16,24 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 interface Props {
   clientSecret: string;
-  bookingId: string;
-  locale: string;
-  token: string;
-  returnUrl: string;
+  bookingId:    string;
+  locale:       string;
+  token:        string;
+  returnUrl:    string;
+  /** authorize = hold card, charge only on provider accept (default) */
+  mode?:  "authorize" | "charge";
+  total?: number;
 }
 
-function CheckoutForm({ returnUrl }: { returnUrl: string }) {
+function CheckoutForm({
+  returnUrl,
+  mode = "authorize",
+  total,
+}: {
+  returnUrl: string;
+  mode?: "authorize" | "charge";
+  total?: number;
+}) {
   const stripe   = useStripe();
   const elements = useElements();
   const t        = useTranslations("guest.payment");
@@ -46,8 +57,21 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
     }
   }
 
+  const buttonLabel = loading
+    ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />{t("processing")}</span>
+    : mode === "authorize"
+      ? `Authorize ${total !== undefined ? `€${total.toFixed(2)}` : ""}`
+      : t("payNow");
+
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {mode === "authorize" && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-sm text-muted-foreground leading-relaxed">
+          Your card will be <span className="font-semibold text-foreground">held but not charged</span> until
+          the provider confirms your request. If declined, the hold is released immediately.
+        </div>
+      )}
+
       <div className="bg-card border border-border rounded-2xl p-5 shadow-warm-sm">
         <PaymentElement />
       </div>
@@ -63,14 +87,7 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
         disabled={!stripe || loading}
         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
       >
-        {loading ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            {t("processing")}
-          </span>
-        ) : (
-          t("payNow")
-        )}
+        {buttonLabel}
       </Button>
 
       <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
@@ -80,7 +97,7 @@ function CheckoutForm({ returnUrl }: { returnUrl: string }) {
   );
 }
 
-export default function StripePaymentForm({ clientSecret, returnUrl }: Props) {
+export default function StripePaymentForm({ clientSecret, returnUrl, mode, total }: Props) {
   return (
     <Elements
       stripe={stripePromise}
@@ -89,14 +106,14 @@ export default function StripePaymentForm({ clientSecret, returnUrl }: Props) {
         appearance: {
           theme: "stripe",
           variables: {
-            colorPrimary:  "#b45309",
-            borderRadius:  "12px",
-            fontFamily:    "var(--font-sans)",
+            colorPrimary: "#b45309",
+            borderRadius: "12px",
+            fontFamily:   "var(--font-sans)",
           },
         },
       }}
     >
-      <CheckoutForm returnUrl={returnUrl} />
+      <CheckoutForm returnUrl={returnUrl} mode={mode} total={total} />
     </Elements>
   );
 }

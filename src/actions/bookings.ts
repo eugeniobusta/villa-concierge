@@ -8,15 +8,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { BookingStatus } from "@/types/database";
 import {
-  sendBookingReceivedEmail,
   sendBookingConfirmedEmail,
-  sendBookingAcceptedEmail,
   sendBookingDeclinedEmail,
-  sendAdminNewBookingEmail,
 } from "@/lib/emails";
 import { getProviderSession } from "@/lib/provider-session";
+import { stripe } from "@/lib/stripe";
 
-type ActionState = { error: string } | null;
+type BookingCreated = { clientSecret: string; bookingId: string; total: number };
+type ActionState = { error: string } | BookingCreated | null;
 
 export async function createBookingAction(
   _prev: ActionState,
@@ -102,7 +101,7 @@ export async function createBookingAction(
   const providerAmount = parseFloat((totalAmount * commissionRate).toFixed(2));
   const platformAmount = parseFloat((totalAmount - providerAmount).toFixed(2));
 
-  const { error } = await db.from("bookings").insert({
+  const { data: newBooking, error } = await db.from("bookings").insert({
     guest_session_id:      session.id,
     provider_service_id:   providerServiceId,
     booking_date:          bookingDate,
@@ -114,32 +113,35 @@ export async function createBookingAction(
     provider_amount:       providerAmount,
     platform_amount:       platformAmount,
     stripe_payment_status: "pending",
+  }).select("id").single();
+
+  if (error || !newBooking) return { error: error?.message ?? "Failed to create booking." };
+
+  // Create a manual-capture PaymentIntent — card is authorized now, charged only on accept
+  const intent = await stripe.paymentIntents.create({
+    amount:         Math.round(totalAmount * 100),
+    currency:       "eur",
+    capture_method: "manual",   // ← hold, don't charge
+    metadata: {
+      booking_id:       newBooking.id,
+      guest_session_id: session.id,
+      guest_name:       session.guest_name,
+    },
   });
 
-  if (error) return { error: error.message };
+  await db
+    .from("bookings")
+    .update({ stripe_payment_intent_id: intent.id })
+    .eq("id", newBooking.id);
 
-  // Send emails — errors are caught inside, never block the redirect
-  const serviceName = service ? (service.name as Record<string, string>).en : "Service";
-  if (session.guest_email) {
-    await sendBookingReceivedEmail({
-      guestName:   session.guest_name,
-      guestEmail:  session.guest_email,
-      serviceName,
-      bookingDate: bookingDate,
-      startTime:   startTime || null,
-      totalAmount,
-      accessToken: session.access_token,
-    });
-  }
-  await sendAdminNewBookingEmail({
-    guestName:   session.guest_name,
-    serviceName,
-    bookingDate,
-    startTime:   startTime || null,
-    totalAmount,
-  });
+  // Emails are sent from the Stripe webhook once the card is actually authorized
+  // (payment_intent.amount_capturable_updated), so we know the booking is real.
 
-  redirect(`/${locale}/stay/${token}/bookings`);
+  return {
+    clientSecret: intent.client_secret!,
+    bookingId:    newBooking.id,
+    total:        totalAmount,
+  };
 }
 
 export async function cancelBookingAction(formData: FormData): Promise<void> {
@@ -278,13 +280,12 @@ export async function providerAcceptBookingAction(bookingId: string): Promise<vo
   // Verify this booking belongs to this provider and is still pending
   const { data: booking } = await db
     .from("bookings")
-    .select("id, status, provider_service_id")
+    .select("id, status, provider_service_id, stripe_payment_intent_id")
     .eq("id", bookingId)
     .single();
 
   if (!booking || booking.status !== "pending") return;
 
-  // Confirm the provider_service belongs to this provider
   const { data: ps } = await db
     .from("provider_services")
     .select("provider_id")
@@ -292,15 +293,23 @@ export async function providerAcceptBookingAction(bookingId: string): Promise<vo
     .eq("provider_id", provider.id)
     .single();
 
-  if (!ps) return; // not their booking
+  if (!ps) return;
 
   await db.from("bookings").update({ status: "confirmed" }).eq("id", bookingId);
 
-  revalidatePath("/[locale]/provider/bookings", "page");
+  // Capture the authorized hold — guest's card is charged now
+  if (booking.stripe_payment_intent_id) {
+    try {
+      await stripe.paymentIntents.capture(booking.stripe_payment_intent_id);
+      // The payment_intent.succeeded webhook will fire and set stripe_payment_status: "paid"
+      // + send the booking confirmed email to the guest
+    } catch (err) {
+      console.error("[stripe] Capture failed for booking", bookingId, err);
+      // Don't block acceptance — admin can handle payment manually if needed
+    }
+  }
 
-  // Notify guest they can now pay
-  const emailData = await getBookingEmailData(bookingId);
-  if (emailData) await sendBookingAcceptedEmail(emailData);
+  revalidatePath("/[locale]/provider/bookings", "page");
 }
 
 export async function providerDeclineBookingAction(bookingId: string): Promise<void> {
@@ -311,7 +320,7 @@ export async function providerDeclineBookingAction(bookingId: string): Promise<v
 
   const { data: booking } = await db
     .from("bookings")
-    .select("id, status, provider_service_id")
+    .select("id, status, provider_service_id, stripe_payment_intent_id")
     .eq("id", bookingId)
     .single();
 
@@ -327,6 +336,15 @@ export async function providerDeclineBookingAction(bookingId: string): Promise<v
   if (!ps) return;
 
   await db.from("bookings").update({ status: "cancelled", cancelled_by: "provider" }).eq("id", bookingId);
+
+  // Release the card hold — guest is never charged
+  if (booking.stripe_payment_intent_id) {
+    try {
+      await stripe.paymentIntents.cancel(booking.stripe_payment_intent_id);
+    } catch (err) {
+      console.error("[stripe] Cancel failed for booking", bookingId, err);
+    }
+  }
 
   revalidatePath("/[locale]/provider/bookings", "page");
 

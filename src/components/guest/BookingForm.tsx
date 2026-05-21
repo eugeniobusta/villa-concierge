@@ -6,8 +6,9 @@ import { createBookingAction } from "@/actions/bookings";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/guest-session";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import type { Provider, AvailabilitySlot } from "@/types/database";
+import StripePaymentForm from "@/components/guest/StripePaymentForm";
 
 interface ProviderWithSlots {
   providerServiceId: string;
@@ -115,6 +116,52 @@ export default function BookingForm({
   function pickBio(bio: Record<string, string> | null) {
     if (!bio) return null;
     return bio[currentLocale] ?? bio.en ?? null;
+  }
+
+  // ── Payment step ────────────────────────────────────────────────────────────
+  // When the server action succeeds it returns { clientSecret, bookingId, total }
+  // instead of redirecting. We switch to the inline Stripe card form.
+  if (state && "clientSecret" in state) {
+    const returnUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/${locale}/stay/${token}/bookings`;
+    return (
+      <div className="space-y-6">
+        {/* Summary — read-only recap of what they're paying for */}
+        <div className="bg-primary/5 border border-primary/15 rounded-2xl p-5">
+          <div className="flex justify-between items-center mb-1">
+            <p className="font-medium text-foreground">{serviceName}</p>
+            <p className="text-xl font-semibold text-foreground">€{state.total.toFixed(2)}</p>
+          </div>
+          {selected && (
+            <p className="text-xs text-muted-foreground">
+              {selected.provider.name}
+              {selectedDate && ` · ${formatDate(selectedDate, { locale })}`}
+              {isHourly && effectiveStart && bookingEndStr
+                ? ` · ${fmtTime(effectiveStart + ":00")} – ${fmtTime(bookingEndStr + ":00")}`
+                : isHourly ? ` · ${duration}h` : ""}
+            </p>
+          )}
+        </div>
+
+        <StripePaymentForm
+          clientSecret={state.clientSecret}
+          bookingId={state.bookingId}
+          locale={locale}
+          token={token}
+          returnUrl={returnUrl}
+          mode="authorize"
+          total={state.total}
+        />
+
+        {/* Back — cancels the intent client-side by navigating away */}
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto"
+        >
+          <ArrowLeft className="h-4 w-4" /> Go back
+        </button>
+      </div>
+    );
   }
 
   const dateButtonClass = (active: boolean, disabled = false) => cn(
@@ -333,7 +380,7 @@ export default function BookingForm({
             <p className="text-xl font-semibold text-foreground">€{total.toFixed(2)}</p>
           </div>
 
-          {state?.error && (
+          {state && "error" in state && (
             <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg mb-3">
               {state.error}
             </p>
@@ -347,13 +394,15 @@ export default function BookingForm({
             {isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>…</span>
+                <span>Setting up payment…</span>
               </span>
             ) : (
-              t("requestBooking", { amount: total.toFixed(2) })
+              `Continue to payment — €${total.toFixed(2)}`
             )}
           </Button>
-          <p className="text-xs text-muted-foreground text-center mt-2">{t("paymentNote")}</p>
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            Your card will be held but not charged until the provider confirms.
+          </p>
         </div>
       )}
     </form>
